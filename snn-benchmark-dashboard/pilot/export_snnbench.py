@@ -13,6 +13,7 @@ import argparse
 import json
 import os
 import sqlite3
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE = os.path.join(HERE, "..", "dashboard", "template.html")
@@ -41,7 +42,12 @@ def main():
     ap.add_argument("--lede", default=None)
     a = ap.parse_args()
 
-    con = sqlite3.connect(f"file:{a.db}?mode=ro", uri=True)
+    db = Path(a.db).resolve()
+    if not db.is_file():
+        raise SystemExit(f"no such file: {db}")
+    # a proper file URI keeps Windows drive letters, backslashes and spaces intact;
+    # mode=ro guarantees the campaign database is never written to
+    con = sqlite3.connect(db.as_uri() + "?mode=ro", uri=True)
     names = {r[0] for r in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     missing = {"runs", "conditions"} - names
     if missing:

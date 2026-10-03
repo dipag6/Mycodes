@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
 pilot/_cache/
+# pages built from a campaign database embed that campaign's data; keep them local
+campaign.html

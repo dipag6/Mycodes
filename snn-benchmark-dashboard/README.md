@@ -5,6 +5,7 @@ small pilot benchmark that shows why a speed comparison needs a fidelity check
 first.
 
 ```
+open_dashboard.py        opens the dashboard in a browser (optionally from a benchmarks.db)
 dashboard/index.html     the dashboard (open it in any browser; no install)
 dashboard/template.html  the same page before the pilot data is embedded
 pilot/                   the benchmark harness that produced the pilot data,
@@ -15,6 +16,12 @@ data/                    the pilot's per-run table, fidelity table and dataset
 ## Open the dashboard
 
 Double-click `dashboard/index.html`. It opens with the pilot's measured data.
+
+The dashboard is HTML and JavaScript in one file, so viewing it needs no Python.
+From PyCharm (or any Python 3.8+), `open_dashboard.py` opens it in your browser;
+with `--db path/to/benchmarks.db` it first builds a page from an snnbench
+campaign (`campaign.html`, kept out of git) and opens that instead. Neither
+step needs any package installed.
 
 To look at another benchmark's results, choose **Load your results** and pick a
 CSV, JSON or SQLite file (for example `results/benchmarks.db` or `runs.csv`
