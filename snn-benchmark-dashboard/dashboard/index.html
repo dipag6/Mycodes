@@ -143,6 +143,10 @@ label.inline { display: inline-flex; gap: 6px; align-items: center; font-size: 1
 .verdicts .why { grid-column: 2 / -1; color: var(--muted); font-size: 12.5px; }
 .verdicts .name { font-weight: 600; }
 .verdicts .figs { color: var(--ink-2); font-size: 13px; justify-self: end; }
+@media (max-width: 560px) {
+  .verdicts li { grid-template-columns: 14px minmax(0, 1fr) auto; }
+  .verdicts .figs { grid-column: 2 / -1; justify-self: start; }
+}
 .swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; transform: translateY(1px); }
 .status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 2px 8px 2px 6px; border-radius: 999px; white-space: nowrap; letter-spacing: 0.01em; }
 .status::before { font-size: 11px; }
@@ -156,6 +160,9 @@ label.inline { display: inline-flex; gap: 6px; align-items: center; font-size: 1
 .status.none::before { content: "–"; }
 .rasters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
 @media (max-width: 560px) { .rasters { grid-template-columns: minmax(0, 1fr); } }
+.rasters.counts { display: block; }
+.hero.counts { align-items: start; }
+.rasters.counts > svg { display: block; width: 100%; height: auto; overflow: visible; }
 .raster figure { margin: 0; }
 .raster figcaption { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; color: var(--ink-2); margin-bottom: 2px; }
 .raster figcaption b { color: var(--ink); font-weight: 600; }
@@ -176,6 +183,7 @@ label.inline { display: inline-flex; gap: 6px; align-items: center; font-size: 1
 /* filter rail */
 .filters { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 41px); z-index: 15; background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(6px); border-block: 1px solid var(--hair); }
 .filters .wrap { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; padding-block: 10px; }
+.filters.unstick { position: static; }
 .fgroup { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .fgroup > .flabel { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 700; }
 .simchips { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -230,6 +238,20 @@ tr:last-child td { border-bottom: 0; }
 .toggle-table { font: inherit; font-size: 12.5px; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .callout { border-left: 3px solid var(--rule); padding: 6px 0 6px 12px; color: var(--ink-2); font-size: 13.5px; }
 .callout b { color: var(--ink); }
+.callout:empty { display: none; }
+
+/* data checks */
+.checks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 12px; }
+.check { border: 1px solid var(--hair); border-left: 4px solid var(--rule); border-radius: 8px; padding: 10px 12px 12px; display: grid; gap: 4px; align-content: start; background: var(--surface); min-width: 0; }
+.check.bad { border-left-color: var(--bad); }
+.check.warn { border-left-color: var(--warn); }
+.check.good { border-left-color: var(--good); }
+.check .tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; }
+.check.bad .tag { color: var(--bad-ink); }
+.check.warn .tag { color: var(--warn-ink); }
+.check.good .tag { color: var(--good-ink); }
+.check h3 { font-size: 14.5px; margin: 0; line-height: 1.3; }
+.check p { font-size: 13px; color: var(--ink-2); margin: 0; overflow-wrap: anywhere; }
 
 /* decision helper */
 .helper-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 14px; }
@@ -290,7 +312,7 @@ footer ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 
 <nav class="toc" aria-label="Sections">
   <div class="wrap">
-    <a href="#parity">Parity</a><a href="#scaling">Scaling</a><a href="#cost">Cost breakdown</a><a href="#memory">Memory</a><a href="#energy">Energy</a><a href="#fidelity">Fidelity</a><a href="#repeat">Repeatability</a><a href="#choose">Choose a simulator</a><a href="#methods">Methods &amp; data</a>
+    <a href="#parity">Parity</a><a href="#checks" id="nav-checks" hidden>Checks</a><a href="#scaling">Scaling</a><a href="#cost">Cost breakdown</a><a href="#memory">Memory</a><a href="#energy">Energy</a><a href="#fidelity">Fidelity</a><a href="#training" id="nav-training" hidden>Training</a><a href="#repeat">Repeatability</a><a href="#choose" id="nav-choose">Choose a simulator</a><a href="#methods">Methods &amp; data</a>
   </div>
 </nav>
 
@@ -301,7 +323,7 @@ footer ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
         <h2>Do they fire the same spikes?</h2>
         <p class="intro" id="hero-intro">Every simulator receives identical input spikes and connectivity. Rings are the reference implementation's spikes, dots are the simulator's own. With default settings most simulators drift; with five semantic choices aligned, the dots land inside the rings. A dot one 0.1 ms step early still looks centred at this scale, so each panel also counts the spikes that land on exactly the same step.</p>
         <div class="panel-tools" style="margin-top:14px">
-          <div class="seg" role="group" aria-label="Settings shown">
+          <div class="seg" role="group" aria-label="Settings shown" id="hero-seg">
             <button type="button" data-hero="native" aria-pressed="true">Default settings</button>
             <button type="button" data-hero="matched" aria-pressed="false">Matched settings</button>
           </div>
@@ -311,7 +333,7 @@ footer ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
       </div>
       <div class="panel">
         <div class="rasters" id="rasters"></div>
-        <div class="legend-inline" aria-hidden="true">
+        <div class="legend-inline" aria-hidden="true" id="raster-legend">
           <span><svg width="14" height="14"><circle cx="7" cy="7" r="4.2" fill="none" stroke="var(--s0)" stroke-width="1.4"/></svg>Reference spike</span>
           <span><svg width="14" height="14"><circle cx="7" cy="7" r="3" fill="var(--ink-2)"/></svg>Simulator spike</span>
           <span id="raster-window"></span>
@@ -319,6 +341,10 @@ footer ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
       </div>
     </div>
     <div class="kpis" id="kpis"></div>
+    <section id="checks" class="panel" hidden>
+      <div class="panel-head"><div><h2>Before reading the rankings</h2><p class="sub">Checks computed from the data itself. Each one limits what a chart below can be used to claim.</p></div></div>
+      <div class="checks-grid" id="checks-list"></div>
+    </section>
   </section>
 
   <div class="filters" id="filters">
@@ -378,7 +404,7 @@ footer ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 
     <div class="grid2">
       <section id="memory" class="panel">
-        <div class="panel-head"><div><h2>Peak memory</h2><p class="sub">Resident set size of the whole process, including the library itself</p></div></div>
+        <div class="panel-head"><div><h2>Peak memory</h2><p class="sub" id="memory-sub">Resident set size of the whole process, including the library itself</p></div></div>
         <div class="legend" id="memory-legend"></div>
         <div class="chart" id="memory-chart"></div>
         <p style="margin-top:8px"><button class="toggle-table" type="button" data-table="memory">Show as table</button></p>
@@ -408,6 +434,16 @@ footer ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
       </div>
       <div class="table-wrap" id="fidelity-table"></div>
       <div class="notes-list" id="fidelity-causes" style="margin-top:14px"></div>
+    </section>
+
+    <section id="training" class="panel" hidden>
+      <div class="panel-head">
+        <div><h2>Training: what it cost and what it learned</h2><p class="sub" id="training-sub"></p></div>
+        <div class="panel-tools"><div class="seg" role="group" aria-label="Training budget" id="train-seg"></div></div>
+      </div>
+      <div class="chart" id="training-chart"></div>
+      <p class="caption" id="training-cap"></p>
+      <div class="table-wrap" id="training-table" style="margin-top:12px"></div>
     </section>
 
     <div class="grid2">
@@ -452,7 +488,7 @@ footer ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
         </div>
       </div>
       <details style="margin-top:14px"><summary>What each simulator was asked to do</summary><div class="notes-list" id="notes-list"></div></details>
-      <details><summary>Rerun this pilot</summary>
+      <details id="rerun-pilot"><summary>Rerun this pilot</summary>
         <p style="font-size:13.5px;color:var(--ink-2)">From the <code>snn-benchmark-dashboard</code> folder, in an environment with the five simulators installed:</p>
         <pre class="cmd">python -m pilot.campaign --out runs/my_machine --sizes 500,1000,2000,4000,8000,16000,32000 --reps 5
 python -m pilot.export --campaign runs/my_machine</pre>
@@ -508,6 +544,22 @@ const KNOWN = [
   { id: "numpy_ref", label: "NumPy reference", slot: 0, paradigm: "Reference", re: /numpy|reference|\bref\b/i },
 ];
 const BRIAN_GENERIC = /brian/i;
+// snnbench campaigns name each configuration "framework/backend"; every variant keeps its own line,
+// in its simulator's colour, with a dash pattern telling variants apart
+const SNNBENCH_IDS = {
+  "nest/threads1": { ord: 1, id: "nest", label: "NEST · 1 thread", short: "NEST ×1", slot: 1, paradigm: "Neuroscience" },
+  "nest/threads2": { ord: 1.1, id: "nest_t2", label: "NEST · 2 threads", short: "NEST ×2", slot: 1, dash: "7 4", paradigm: "Neuroscience" },
+  "nest/threads4": { ord: 1.2, id: "nest_t4", label: "NEST · 4 threads", short: "NEST ×4", slot: 1, dash: "2 3", paradigm: "Neuroscience" },
+  "brian2/numpy": { ord: 1.9, id: "brian2_numpy", label: "Brian2 · NumPy", short: "B2 NumPy", slot: 7, paradigm: "Neuroscience" },
+  "brian2/cython": { ord: 2, id: "brian2_cython", label: "Brian2 · Cython", short: "B2 Cython", slot: 2, paradigm: "Neuroscience" },
+  "brian2/cpp_standalone": { ord: 3, id: "brian2_cpp", label: "Brian2 · C++ standalone", short: "B2 C++", slot: 3, paradigm: "Neuroscience" },
+  "nengo/reference": { ord: 4, id: "nengo", label: "Nengo", slot: 4, paradigm: "Neural engineering" },
+  "snntorch/cpu": { ord: 5, id: "snntorch", label: "snnTorch", slot: 5, paradigm: "Deep learning" },
+  "spikingjelly/cpu": { ord: 6, id: "spikingjelly", label: "SpikingJelly", short: "SJelly", slot: 6, paradigm: "Deep learning" },
+  "reference/vectorised": { ord: 98, id: "numpy_ref", label: "NumPy control · vectorised", short: "NumPy vec", slot: 0, paradigm: "Reference" },
+  "reference/scalar": { ord: 99, id: "numpy_ref_scalar", label: "NumPy control · loop", short: "NumPy loop", slot: 0, dash: "7 4", paradigm: "Reference" },
+};
+const isRef = id => id === "numpy_ref" || id === "numpy_ref_scalar";
 const PARADIGM_ORDER = ["Neuroscience", "Neural engineering", "Deep learning", "Other", "Reference"];
 // documented capabilities (not measured here); used only by the decision helper
 const CAPS = {
@@ -519,9 +571,13 @@ const CAPS = {
   spikingjelly: { grad: true, gpu: "CUDA / CuPy kernels" },
   numpy_ref: { grad: false, gpu: false },
 };
+CAPS.nest_t2 = CAPS.nest_t4 = CAPS.nest; CAPS.brian2_numpy = CAPS.brian2_cython; CAPS.numpy_ref_scalar = CAPS.numpy_ref;
 
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+// the page's own wording, restored whenever a dataset without its own wording is shown
+const HERO_INTRO = $("#hero-intro").textContent, LEDE = $("#lede").textContent;
+const SCALING_CAP = $("#scaling-cap").innerHTML, FID_SUB = $("#fidelity .sub").textContent;
 const SVGNS = "http://www.w3.org/2000/svg";
 function svg(tag, attrs, parent) {
   const e = document.createElementNS(SVGNS, tag);
@@ -578,10 +634,10 @@ function makeRegistry() {
     get(raw) {
       const key = String(raw == null ? "" : raw).trim();
       if (reg.has(key)) return reg.get(key);
-      let k = KNOWN.find(x => x.id === key) || KNOWN.find(x => x.re.test(key));
+      let k = SNNBENCH_IDS[key] || KNOWN.find(x => x.id === key) || KNOWN.find(x => x.re.test(key));
       if (!k && BRIAN_GENERIC.test(key)) k = { ...KNOWN[1], label: "Brian2" };
       let ent;
-      if (k) ent = { id: k.id, label: k.label, slot: k.slot, paradigm: k.paradigm };
+      if (k) ent = { id: k.id, label: k.label, short: k.short, slot: k.slot, paradigm: k.paradigm, dash: k.dash, ord: k.ord };
       else {
         const slot = nextSlot <= 8 ? nextSlot++ : 0;
         ent = { id: key || "unknown", label: key || "Unknown", slot, paradigm: slot ? "Other" : "Other" };
@@ -614,10 +670,116 @@ function fromPilot(p) {
   };
 }
 
+/* snnbench campaign database (tables runs, conditions, meta), read as it is stored:
+   one row per phase per measured run, warm-ups already discarded */
+function tableRows(t) {
+  if (!t) return [];
+  if (Array.isArray(t)) return t;
+  return (t.rows || []).map(v => Object.fromEntries(t.columns.map((c, i) => [c, v[i]])));
+}
+function fromSnnbench(T, name) {
+  const reg = makeRegistry();
+  const num = v => v == null || v === "" ? NaN : +v;
+  const keyOf = r => `${r.framework}/${r.backend}`;
+  const runsT = tableRows(T.runs), condT = tableRows(T.conditions), metaT = tableRows(T.meta);
+  // sessions: the run groups holding the simulation tasks, in the order they started
+  const simRows = runsT.filter(r => r.task !== "training");
+  const startOf = new Map();
+  for (const r of simRows) { const t = String(r.created_at || ""); if (!startOf.has(r.run_group) || t < startOf.get(r.run_group)) startOf.set(r.run_group, t); }
+  const groups = [...startOf.keys()].sort((a, b) => startOf.get(a) < startOf.get(b) ? -1 : 1);
+  const hwOf = new Map(groups.map((g, i) => [g, `Session ${String.fromCharCode(65 + i)} · ${startOf.get(g).slice(0, 16).replace("T", " ")}`]));
+  const taskName = t => t === "inference" ? "Inference (N = 100)" : t === "scalability" ? "Scaling sweep" : t;
+  const piv = new Map();
+  for (const r of simRows) {
+    const k = [r.run_group, keyOf(r), r.task, r.network_size, r.run_index].join("|");
+    if (!piv.has(k)) piv.set(k, { g: r.run_group, key: keyOf(r), task: r.task, n: num(r.network_size), idx: num(r.run_index), ph: {} });
+    piv.get(k).ph[r.phase] = r;
+  }
+  const cpuS = row => row && finite(num(row.runtime_s)) && finite(num(row.cpu_pct)) ? num(row.runtime_s) * num(row.cpu_pct) / 100 : NaN;
+  const runs = [], threadsOf = {};
+  for (const x of piv.values()) {
+    const b = reg.get(x.key), su = x.ph.setup, si = x.ph.simulate;
+    if (!si) continue;
+    const th = /threads(\d+)/.exec(x.key); if (th) threadsOf[b.id] = +th[1];
+    const tb = su ? num(su.runtime_s) : NaN, ts = num(si.runtime_s);
+    runs.push({ b: b.id, n: x.n, mode: "all", rep: x.idx, warm: false, ok: finite(ts), status: "ok", task: taskName(x.task), hw: hwOf.get(x.g), group: x.g,
+      t: { import: NaN, build: tb, prepare: NaN, simulate: ts, collect: NaN, total: finite(tb) ? tb + ts : ts },
+      cpu: { simulate: cpuS(si), total: finite(cpuS(su)) ? cpuS(su) + cpuS(si) : cpuS(si) }, cpuPct: num(si.cpu_pct),
+      mem: { peak: Math.max(su ? num(su.peak_rss_mb) || 0 : 0, num(si.peak_rss_mb) || 0) || NaN, base: NaN, setup: su ? num(su.peak_rss_mb) : NaN, sim: num(si.peak_rss_mb) },
+      spikes: num(si.spikes), energy: num(si.energy_j) });
+  }
+  // parity: spike counts against the plain-NumPy loop, per session and size
+  const sweep = runs.some(r => r.task === "Scaling sweep") ? "Scaling sweep" : (runs[0] || {}).task;
+  const refId = runs.some(r => r.b === "numpy_ref_scalar") ? "numpy_ref_scalar" : "numpy_ref";
+  const fidelity = [];
+  for (const g of groups) {
+    const rs = runs.filter(r => r.group === g && r.task === sweep);
+    for (const n of [...new Set(rs.map(r => r.n))].sort((a, b) => a - b)) {
+      const ref = median(rs.filter(r => r.b === refId && r.n === n).map(r => r.spikes).filter(finite));
+      if (!finite(ref) || ref <= 0) continue;
+      for (const id of [...new Set(rs.map(r => r.b))]) {
+        const s = median(rs.filter(r => r.b === id && r.n === n).map(r => r.spikes).filter(finite));
+        if (finite(s)) fidelity.push({ backend: id, n_neurons: n, mode: "all", hw: hwOf.get(g), n_spikes_ref: ref, n_spikes: s, count_rel_err: (s - ref) / ref, exact_match: NaN, rate_corr: NaN, gamma_1ms: NaN, cause: "" });
+      }
+    }
+  }
+  // variants of one simulator, given the same configuration, should emit the same spikes
+  const family = id => /^nest/.test(id) ? "NEST" : /^brian2/.test(id) ? "Brian2" : null;
+  for (const hw of groups.map(g => hwOf.get(g))) for (const F of ["NEST", "Brian2"]) {
+    const rows = fidelity.filter(f => f.hw === hw && family(f.backend) === F);
+    const at = [...new Set(rows.map(f => f.n_neurons))].sort((a, b) => a - b).find(n => new Set(rows.filter(f => f.n_neurons === n).map(f => f.n_spikes)).size > 1);
+    if (at == null) continue;
+    const same = rows.filter(f => f.n_neurons === at).sort((a, b) => reg.all().findIndex(e => e.id === a.backend) - reg.all().findIndex(e => e.id === b.backend));
+    const list = same.map(f => `${fmtInt(f.n_spikes)} (${shortName(info2(reg, f.backend))})`).join(", ");
+    same[0].cause = `${F}'s variants emit different spike counts on the same configuration: at N = ${fmtInt(at)}, ${list}, against ${fmtInt(same[0].n_spikes_ref)} for the NumPy loop. Their runtimes are not measured on identical work.`;
+  }
+  // sessions repeated on the same machine: compare medians at the largest size both reached
+  let drift = null;
+  if (groups.length >= 2) {
+    const [ga, gb] = groups, rows = [];
+    const nMax = Math.max(...runs.filter(r => r.task === sweep).map(r => r.n));
+    for (const id of [...new Set(runs.map(r => r.b))]) {
+      const a = median(runs.filter(r => r.group === ga && r.b === id && r.n === nMax && r.task === sweep).map(r => r.t.simulate));
+      const b = median(runs.filter(r => r.group === gb && r.b === id && r.n === nMax && r.task === sweep).map(r => r.t.simulate));
+      if (finite(a) && finite(b) && b > 0) rows.push({ backend: id, n_neurons: nMax, host_a_s: a, host_b_s: b, ratio_a_over_b: a / b });
+    }
+    const gap = (Date.parse(startOf.get(gb)) - Date.parse(startOf.get(ga))) / 60000;
+    drift = { sessions: true, labelA: hwOf.get(ga).split(" · ")[0], labelB: hwOf.get(gb).split(" · ")[0], minutes: gap, rows };
+  }
+  // training conditions: one row each, with the budget and learning rule parsed from the notes
+  const training = condT.filter(c => c.task === "training").map(c => {
+    const e = reg.get(keyOf(c)), note = String(c.notes || "");
+    const kv = Object.fromEntries([...note.matchAll(/(\w+)=([^;]*);/g)].map(m => [m[1], m[2].trim()]));
+    const rule = note.replace(/^(\s*\w+=[^;]*;)+\s*/, "").trim();
+    const epochs = num(kv.epochs), wall = num(kv.util_wall_s), t = num(c.runtime_median_s);
+    const perEpoch = finite(wall) && epochs > 0 && finite(t) && Math.abs(t - wall / epochs) / t < 0.05;
+    const whole = !perEpoch && finite(wall) && finite(t) && Math.abs(t - wall) / t < 0.05 && epochs > 1;
+    return { b: e.id, hidden: num(c.network_size), preset: kv.preset || "", train_n: num(kv.train_n), test_n: num(kv.test_n), epochs, t, perEpoch, whole, wall,
+      cpuPct: num(c.cpu_pct), mem: num(c.peak_rss_mb), energy: num(c.energy_median_j), acc: num(c.accuracy_pct), rule };
+  });
+  // context from the meta table: machine, package versions and the campaign's configuration
+  const m0 = metaT.find(r => r.run_group === groups[0]) || metaT[0] || {};
+  const pj = s => { try { return JSON.parse(s || "{}"); } catch (e) { return {}; } };
+  const machine = pj(m0.machine_json), packages = pj(m0.packages_json), config = pj(m0.config_json);
+  const notes = new Map();
+  for (const c of condT) if (c.task !== "training" && c.notes && !notes.has(keyOf(c))) notes.set(keyOf(c), String(c.notes));
+  const compileDominated = new Set(condT.filter(c => +c.compile_dominated === 1).map(c => reg.get(keyOf(c)).id));
+  const bio = finite(num(config.SIM_MS)) ? num(config.SIM_MS) / 1000 : 1;
+  return {
+    source: "snnbench", name: name || "snnbench campaign", runs, reg, fidelity, raster: null, drift, training, threadsOf, compileDominated,
+    meta: { machine, packages, config, groups: groups.map(g => hwOf.get(g)) }, backendNotes: [...notes.entries()].map(([k, v]) => ({ id: reg.get(k).id, text: v })),
+    backendsInfo: [], bioSeconds: bio, energyLabel: finite(num(config.TDP_CPU_W)) ? `estimated: CPU-seconds × ${num(config.TDP_CPU_W)} W` : "estimated (model-based)",
+    energyCaption: `Plotted as recorded: runtime × utilisation × ${finite(num(config.TDP_CPU_W)) ? num(config.TDP_CPU_W) + " W" : "a fixed power"}${config.TDP_CPU_SOURCE ? ` (${config.TDP_CPU_SOURCE})` : ""}. Every value is CPU time multiplied by one constant, so it ranks configurations exactly as CPU time does; no power was measured.`,
+    hasModes: false, fitAll: true, noHelper: bio < 0.1, defaultTask: sweep, defaultHw: hwOf.get(groups[0]) || null, hwLabel: "Session",
+    tolerance: 0.35, scalingNote: "5 measured runs per point",
+  };
+}
+function info2(reg, id) { return reg.all().find(x => x.id === id) || { id, label: id }; }
+
 /* ---------- state ---------- */
 const state = {
   ds: null, pilot: null, mode: "matched", task: null, hw: null, hidden: new Set(),
-  phase: "simulate", clock: "wall", focusN: null, run: "typical", heroMode: "native", fmode: "native",
+  phase: "simulate", clock: "wall", focusN: null, run: "typical", heroMode: "native", fmode: "native", trainBudget: null,
 };
 
 function activeRuns() {
@@ -628,14 +790,20 @@ function activeRuns() {
     && (state.hw == null || r.hw === state.hw));
 }
 function visibleBackends() {
-  const order = id => { const e = state.ds.reg.all().find(x => x.id === id); return e ? (e.slot || 99) : 99; };
+  const order = id => { const e = state.ds.reg.all().find(x => x.id === id); return e ? (e.ord != null ? e.ord : e.slot || 99) : 99; };
   const ids = [...new Set(state.ds.runs.map(r => r.b))];
   return ids.sort((a, b) => order(a) - order(b)).map(id => state.ds.reg.all().find(x => x.id === id));
 }
 const isShown = id => !state.hidden.has(id);
 const info = id => state.ds.reg.all().find(x => x.id === id) || { id, label: id, color: "var(--s0)", paradigm: "Other" };
 const SHORT = { brian2_cython: "B2 Cython", brian2_cpp: "B2 C++", numpy_ref: "NumPy", spikingjelly: "SJelly" };
-const shortName = e => SHORT[e.id] || (e.label.length > 11 ? e.label.slice(0, 10) + "…" : e.label);
+const shortName = e => e.short || SHORT[e.id] || (e.label.length > 11 ? e.label.slice(0, 10) + "…" : e.label);
+// a legend key drawn with the same dash pattern as the line it names
+function lineKeyStyle(e) {
+  if (!e.dash) return `background:${e.color}`;
+  const [on, off] = e.dash.split(" ").map(Number);
+  return `width:20px;background:repeating-linear-gradient(90deg, ${e.color} 0 ${on}px, transparent ${on}px ${on + off}px)`;
+}
 
 function pickTime(r, phase, clock) {
   if (clock === "cpu") {
@@ -667,9 +835,15 @@ function aggregate(runs, value, useWarm) {
   }
   return out.sort((a, b) => a.n - b.n);
 }
-function fitSlope(points) {
+function lastStep(points) {
+  const pts = points.filter(p => finite(p.med) && p.med > 0 && p.n > 0).sort((a, b) => a.n - b.n);
+  if (pts.length < 3) return NaN;
+  const a = pts[pts.length - 2], b = pts[pts.length - 1];
+  return Math.log(b.med / a.med) / Math.log(b.n / a.n);
+}
+function fitSlope(points, all) {
   const pts = points.filter(p => finite(p.med) && p.med > 0 && p.n > 0);
-  const use = pts.length > 3 ? pts.filter(p => p.n >= 1000) : pts;
+  const use = !all && pts.length > 3 ? pts.filter(p => p.n >= 1000) : pts;
   if (use.length < 2) return NaN;
   const xs = use.map(p => Math.log10(p.n)), ys = use.map(p => Math.log10(p.med));
   const mx = mean(xs), my = mean(ys);
@@ -727,7 +901,7 @@ function seriesLegend(el, ids, kind) {
     if (!groups.has(p)) continue;
     el.appendChild(h("span", { class: "group-label", text: p }));
     for (const e of groups.get(p)) {
-      const key = h("span", { class: kind === "rect" ? "rect-key" : "line-key", style: `background:${e.color}` });
+      const key = h("span", { class: kind === "rect" ? "rect-key" : "line-key", style: kind === "rect" ? `background:${e.color}` : lineKeyStyle(e) });
       el.appendChild(h("span", { class: "key" }, key, e.label));
     }
   }
@@ -740,7 +914,9 @@ function lineChart(host, opts) {
   if (!series.length) { host.appendChild(h("div", { class: "empty", text: opts.empty || "No data for this selection." })); return; }
   const W = Math.max(320, host.clientWidth || 800), H = opts.height || 380;
   const narrow = W < 560;
-  const m = { l: narrow ? 64 : 78, r: narrow ? 104 : 176, t: 14, b: 44 };
+  // room for the longest end label (name plus exponent), within a third of the width
+  const longest = Math.max(...series.map(s => s.label.length + (s.exp ? s.exp.length + 2 : 0)));
+  const m = { l: narrow ? 64 : 78, r: narrow ? 104 : Math.round(Math.min(Math.max(176, longest * 7.4 + 22), W / 3)), t: 14, b: 44 };
   const tickFmt = opts.tickFmt || opts.yFmt;
   const all = series.flatMap(s => s.points);
   const xs = all.map(p => p.n), ys = all.flatMap(p => [p.min, p.max, p.med]).filter(v => finite(v) && v > 0);
@@ -779,7 +955,7 @@ function lineChart(host, opts) {
       svg("polygon", { points: top + " " + bot, style: `fill:${s.color};opacity:0.1` }, root);
     }
     if (s.points.length > 1)
-      svg("polyline", { points: s.points.map(p => `${xsL(p.n)},${ysL(p.med)}`).join(" "), fill: "none", style: `stroke:${s.color}`, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, root);
+      svg("polyline", { points: s.points.map(p => `${xsL(p.n)},${ysL(p.med)}`).join(" "), fill: "none", style: `stroke:${s.color}`, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": s.dash ? "butt" : "round", "stroke-dasharray": s.dash || null }, root);
   }
   for (const s of series) for (const p of s.points)
     svg("circle", { cx: xsL(p.n), cy: ysL(p.med), r: 4, style: `fill:${s.color};stroke:var(--surface)`, "stroke-width": 2 }, root);
@@ -893,10 +1069,25 @@ function table(container, head, rows, numericCols) {
 function verdict(f) {
   if (!f) return { cls: "none", text: "Not checked" };
   if (finite(f.exact_match) && f.exact_match >= 0.999) return { cls: "good", text: "Spike-exact" };
+  if (!finite(f.exact_match) && finite(f.count_rel_err)) {
+    // counts only: agreement is necessary for equivalence, never sufficient
+    const e = Math.abs(f.count_rel_err), tol = state.ds.tolerance || 0.35;
+    if (e <= 0.05) return { cls: "good", text: "Count within 5%" };
+    if (e <= tol) return { cls: "warn", text: `Within ${Math.round(tol * 100)}%` };
+    return { cls: "bad", text: `Outside ${Math.round(tol * 100)}%` };
+  }
   if (finite(f.count_rel_err) && Math.abs(f.count_rel_err) <= 0.01 && (!finite(f.rate_corr) || f.rate_corr >= 0.99)) return { cls: "warn", text: "Same rates" };
   return { cls: "bad", text: "Differs" };
 }
-function fidFor(b, n, mode) { return (state.ds.fidelity || []).find(f => f.backend === b && f.n_neurons === n && f.mode === mode); }
+// fidelity rows that apply to the current view (per session when the dataset has sessions)
+function fidRows() {
+  const all = state.ds.fidelity || [];
+  if (!all.some(f => f.hw)) return all;
+  const hw = state.hw || state.ds.defaultHw;
+  return all.filter(f => f.hw === hw);
+}
+const signedPct = (x, d = 1) => finite(x) ? (x >= 0 ? "+" : "−") + Math.abs(x * 100).toFixed(d) + "%" : "–";
+function fidFor(b, n, mode) { return fidRows().find(f => f.backend === b && f.n_neurons === n && f.mode === mode); }
 
 /* ---------- renderers ---------- */
 function renderSource() {
@@ -907,11 +1098,16 @@ function renderSource() {
     const when = (m.finished || m.started || "").slice(0, 10);
     txt.appendChild(h("b", { text: "Reference pilot" }));
     txt.appendChild(document.createTextNode(` · measured ${when} · ${mc.replace(/\(R\)/g, "")}, ${m.machine ? m.machine.logical_cpus : "?"} vCPU, 1 thread`));
+  } else if (ds.source === "snnbench") {
+    const mc = m.machine || {};
+    txt.appendChild(h("b", { text: ds.name }));
+    txt.appendChild(document.createTextNode(` · ${ds.runs.length.toLocaleString("en-US")} measured runs in ${m.groups.length} session${m.groups.length === 1 ? "" : "s"}${ds.training.length ? ` + ${ds.training.length} training runs` : ""} · ${(mc.cpu || "CPU").replace(/\(R\)|\(TM\)/g, "")}${mc.logical_cores ? `, ${mc.logical_cores} logical cores` : ""}`));
   } else {
     txt.appendChild(h("b", { text: ds.name }));
     txt.appendChild(document.createTextNode(` · ${ds.runs.length.toLocaleString("en-US")} rows loaded from your file`));
   }
-  $("#back-pilot").hidden = ds.source === "pilot";
+  $("#back-pilot").hidden = ds.source === "pilot" || !state.pilot;
+  $("#lede").textContent = ds.lede || LEDE;
 }
 
 function renderFilters() {
@@ -927,6 +1123,8 @@ function renderFilters() {
   fillSelect($("#sel-task"), tasks, state.task, v => { state.task = v; renderAll(); });
   fillSelect($("#sel-hw"), hws, state.hw, v => { state.hw = v; renderAll(); });
   $("#fg-task").hidden = tasks.length < 2; $("#fg-hw").hidden = hws.length < 2;
+  $("#fg-hw .flabel").textContent = ds.hwLabel || "Hardware";
+  $("#sel-hw").setAttribute("aria-label", ds.hwLabel || "Hardware");
   const chips = clear($("#simchips"));
   for (const e of visibleBackends()) {
     const b = h("button", { class: "simchip", type: "button", "aria-pressed": String(isShown(e.id)) }, h("span", { class: "swatch", style: `background:${e.color}` }), e.label);
@@ -941,6 +1139,10 @@ function renderFilters() {
     state.focusN = common.length ? common[common.length - 1] : ns[ns.length - 1];
   }
   for (const n of ns) { const o = h("option", { value: n, text: fmtInt(n) + " neurons" }); if (n === state.focusN) o.selected = true; sel.appendChild(o); }
+  // a rail that wraps onto many rows would cover the charts while scrolling; let it scroll away instead
+  const rail = $("#filters");
+  rail.classList.remove("unstick");
+  rail.classList.toggle("unstick", rail.offsetHeight > Math.min(130, 0.16 * window.innerHeight));
 }
 function fillSelect(sel, values, cur, onChange) {
   clear(sel);
@@ -949,10 +1151,66 @@ function fillSelect(sel, values, cur, onChange) {
   sel.onchange = () => onChange(sel.value || null);
 }
 
+function renderCountHero(host, list) {
+  const ds = state.ds, tol = ds.tolerance || 0.35, T = Math.round(tol * 100);
+  const fid = fidRows().filter(f => !isRef(f.backend) && isShown(f.backend));
+  const ns = [...new Set(fid.map(f => f.n_neurons))].sort((a, b) => a - b);
+  const ids = visibleBackends().map(e => e.id).filter(id => fid.some(f => f.backend === id));
+  $("#hero-n").textContent = `${fmtInt(ns[0])} to ${fmtInt(ns[ns.length - 1])} neurons · ${state.hw || ds.defaultHw || ""}`;
+  if (!ids.length) { host.appendChild(h("div", { class: "empty", text: "Every simulator is hidden. Turn one back on in the filter bar." })); return; }
+  const rows = ids.map(id => ({ id, e: info(id), pts: ns.map(n => fid.find(f => f.backend === id && f.n_neurons === n)).filter(Boolean) }));
+  const W = Math.max(320, host.clientWidth || 560), narrow = W < 520;
+  const rowH = 27, m = { l: narrow ? 80 : 160, r: 14, t: 26, b: 40 };
+  const H = m.t + rows.length * rowH + m.b;
+  const errs = fid.map(f => f.count_rel_err * 100);
+  const lo = Math.min(-T - 10, Math.floor(Math.min(...errs) / 10) * 10), hi = Math.max(20, Math.ceil(Math.max(...errs) / 10) * 10);
+  const x = linScale(lo, hi, m.l, W - m.r);
+  const root = svg("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Spike count of each simulator against the NumPy reference, one dot per network size" }, host);
+  const band = (a, b, op) => { a = Math.max(lo, a); b = Math.min(hi, b); svg("rect", { x: x(a), y: m.t, width: Math.max(0, x(b) - x(a)), height: H - m.t - m.b, style: `fill:var(--good);opacity:${op}` }, root); };
+  band(-T, T, 0.08); band(-5, 5, 0.18);
+  for (let v = Math.ceil(lo / 10) * 10; v <= hi; v += 10) {
+    svg("line", { x1: x(v), x2: x(v), y1: m.t, y2: H - m.b, class: "grid-line", opacity: 0.6 }, root);
+    if (!narrow || v % 20 === 0) svg("text", { x: x(v), y: H - m.b + 16, "text-anchor": "middle", class: "tick-label" }, root).textContent = (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + "%";
+  }
+  svg("line", { x1: x(0), x2: x(0), y1: m.t - 4, y2: H - m.b, class: "ref-line" }, root);
+  svg("text", { x: x(-T) + 4, y: m.t - 8, class: "ref-label", style: "font-size:11px" }, root).textContent = `±${T}% tolerance`;
+  if (!narrow) svg("text", { x: x(5) + 4, y: m.t - 8, class: "ref-label", style: "font-size:11px" }, root).textContent = "±5%";
+  svg("text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle", class: "axis-title" }, root).textContent = "Spike count against the NumPy loop";
+  const rad = j => 2.6 + j * (narrow ? 0.7 : 1.05);
+  rows.forEach((r, i) => {
+    const cy = m.t + i * rowH + rowH / 2;
+    svg("line", { x1: m.l, x2: W - m.r, y1: cy, y2: cy, class: "grid-line", opacity: 0.35 }, root);
+    svg("text", { x: 0, y: cy + 4, class: "row-label" }, root).textContent = narrow ? shortName(r.e) : r.e.label;
+    for (const p of [...r.pts].reverse()) {
+      const j = ns.indexOf(p.n_neurons), out = Math.abs(p.count_rel_err) > tol;
+      const c = svg("circle", { cx: x(p.count_rel_err * 100), cy, r: rad(j), style: `fill:${r.e.color};fill-opacity:0.8;stroke:${out ? "var(--bad)" : "var(--surface)"}`, "stroke-width": out ? 2 : 1.2, tabindex: 0 }, root);
+      const show = evt => showTip(evt, `${r.e.label} · N = ${fmtInt(p.n_neurons)}`, [{ color: r.e.color, value: fmtInt(p.n_spikes), label: "spikes" }, { color: "var(--s0)", value: fmtInt(p.n_spikes_ref), label: "NumPy loop" }], `${signedPct(p.count_rel_err)} against the reference${out ? `, outside the ${T}% tolerance` : ""}`);
+      c.addEventListener("pointermove", show); c.addEventListener("pointerleave", hideTip);
+      c.addEventListener("focus", () => { const b = c.getBoundingClientRect(); show({ clientX: b.right, clientY: b.top }); }); c.addEventListener("blur", hideTip);
+    }
+  });
+  const dot = (rr, stroke) => { const s = svg("svg", { width: 16, height: 16, "aria-hidden": "true" }); svg("circle", { cx: 8, cy: 8, r: rr, fill: stroke ? "none" : "var(--ink-2)", stroke: stroke || null, "stroke-width": stroke ? 2 : null }, s); return s; };
+  host.appendChild(h("div", { class: "legend-inline" }, h("span", { text: "Dot size = network size:" }), ...ns.map((n, j) => h("span", null, dot(rad(j)), fmtN(n))), h("span", null, dot(5, "var(--bad)"), "outside tolerance")));
+  for (const r of rows) {
+    const worst = r.pts.reduce((a, b) => Math.abs(b.count_rel_err) > Math.abs(a.count_rel_err) ? b : a, r.pts[0]);
+    const v = verdict(worst);
+    // the reasons live in the checks panel and the fidelity notes; the list stays one line per simulator
+    list.appendChild(h("li", null, h("span", { class: "swatch", style: `background:${r.e.color}` }), h("span", { class: "name", text: r.e.label }), h("span", { class: "status " + v.cls, text: v.text }), h("span", { class: "figs num", title: `Largest gap from the reference, at N = ${fmtInt(worst.n_neurons)}`, text: `${signedPct(worst.count_rel_err)} at ${fmtN(worst.n_neurons)}` })));
+  }
+}
+
 function renderHero() {
   const ds = state.ds, R = ds.raster;
   const host = clear($("#rasters")), list = clear($("#verdicts"));
   $$("[data-hero]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.hero === state.heroMode)));
+  const countsOnly = !R && fidRows().length > 0 && !fidRows().some(f => finite(f.exact_match));
+  $("#hero-seg").hidden = countsOnly; $("#raster-legend").hidden = countsOnly;
+  host.classList.toggle("counts", countsOnly);
+  $(".hero").classList.toggle("counts", countsOnly);
+  $("#hero-intro").textContent = countsOnly
+    ? `No spike trains were stored, so parity can only be checked on spike counts. Each dot is one network size, placed by how far the simulator's count sits from the plain-NumPy loop. The campaign's own check accepts ±${Math.round((ds.tolerance || 0.35) * 100)}% (light band); the darker band is ±5%. Matching counts are necessary for two simulators to compute the same thing, not sufficient.`
+    : HERO_INTRO;
+  if (countsOnly) { renderCountHero(host, list); return; }
   if (!R || !R.reference) {
     host.appendChild(h("div", { class: "empty", text: "This dataset has no spike trains, so the parity view is unavailable. Timing charts below still work." }));
     $("#hero-n").textContent = "";
@@ -993,9 +1251,15 @@ function renderKPIs() {
   const host = clear($("#kpis")), ds = state.ds, runs = activeRuns().filter(r => isShown(r.b));
   const tile = (label, value, unit, foot) => host.appendChild(h("div", { class: "kpi" }, h("span", { class: "label", text: label }), h("span", { class: "value" }, value, unit ? h("small", { text: unit }) : null), h("span", { class: "foot", text: foot || "" })));
   // 1 parity
-  const fid = ds.fidelity || [];
-  if (fid.length) {
-    const ids = [...new Set(fid.map(f => f.backend))].filter(b => b !== "numpy_ref" && isShown(b));
+  const fid = fidRows();
+  if (fid.length && !fid.some(f => finite(f.exact_match))) {
+    const ids = [...new Set(fid.map(f => f.backend))].filter(b => !isRef(b) && isShown(b)), tol = ds.tolerance || 0.35;
+    const within = lim => ids.filter(b => fid.filter(f => f.backend === b).every(f => Math.abs(f.count_rel_err) <= lim)).length;
+    const has500 = fid.some(f => f.n_neurons === 500);
+    const at500 = ids.filter(b => { const f = fid.find(x => x.backend === b && x.n_neurons === 500); return f && Math.abs(f.count_rel_err) <= tol; }).length;
+    tile(`Spike counts within ${Math.round(tol * 100)}% of the reference at every size`, `${within(tol)} of ${ids.length}`, null, `Within 5% at every size: ${within(0.05)} of ${ids.length}${has500 ? ` · at N = 500 alone: ${at500} of ${ids.length}` : ""}`);
+  } else if (fid.length) {
+    const ids = [...new Set(fid.map(f => f.backend))].filter(b => !isRef(b) && isShown(b));
     const exactAll = mode => ids.filter(b => { const rows = fid.filter(f => f.backend === b && f.mode === mode); return rows.length && rows.every(f => f.exact_match >= 0.999); }).length;
     if (ds.source === "pilot" || fid.some(f => f.mode === "matched")) tile("Spike-exact at every size, matched settings", `${exactAll("matched")} of ${ids.length}`, null, `With default settings: ${exactAll("native")} of ${ids.length}`);
     else tile("Spike-exact at every size", `${exactAll(fid[0].mode)} of ${ids.length}`, null, "From the parity columns in your file");
@@ -1004,7 +1268,7 @@ function renderKPIs() {
   const sim = aggregate(runs, r => r.t.simulate, false);
   const nMax = Math.max(...sim.map(a => a.n));
   const atMax = sim.filter(a => a.n === nMax).sort((a, b) => a.med - b.med);
-  const simsAt = atMax.filter(a => a.b !== "numpy_ref"), refAt = atMax.find(a => a.b === "numpy_ref");
+  const simsAt = atMax.filter(a => !isRef(a.b)), refAt = atMax.find(a => a.b === "numpy_ref") || atMax.find(a => isRef(a.b));
   const per = ds.bioSeconds === 1 ? "per simulated second" : "per run";
   const tie = simsAt.length > 1 && simsAt[1].med / simsAt[0].med < 1.05 ? `, level with ${info(simsAt[1].b).label} (within 5%)` : "";
   if (simsAt.length) tile(`Fastest simulator at N = ${fmtInt(nMax)}`, info(simsAt[0].b).label, null, `${fmtTime(simsAt[0].med)} ${per}${tie}${refAt ? ` · plain NumPy baseline ${fmtTime(refAt.med)}` : simsAt.length > 1 ? ` · slowest ${info(simsAt[simsAt.length - 1].b).label}, ${fmtTime(simsAt[simsAt.length - 1].med)}` : ""}`);
@@ -1018,7 +1282,11 @@ function renderKPIs() {
   }
   // 4 host drift
   const d = ds.drift && ds.drift.rows && ds.drift.rows.filter(r => isShown(r.backend));
-  if (d && d.length) {
+  if (d && d.length && ds.drift.sessions) {
+    const dev = r => Math.max(r.ratio_a_over_b, 1 / r.ratio_a_over_b);
+    const worst = d.reduce((a, b) => dev(b) > dev(a) ? b : a);
+    tile(`${ds.drift.labelA} against ${ds.drift.labelB}, same machine`, `${dev(worst).toFixed(2)}×`, "apart", `Largest gap: ${info(worst.backend).label} at N = ${fmtInt(worst.n_neurons)}; median gap ${median(d.map(dev)).toFixed(2)}× over ${d.length} configurations`);
+  } else if (d && d.length) {
     const worst = d.reduce((a, b) => b.ratio_a_over_b > a.ratio_a_over_b ? b : a);
     tile("Same code, a different cloud CPU", `${worst.ratio_a_over_b.toFixed(1)}×`, "slower", `${info(worst.backend).label}; range ${Math.min(...d.map(r => r.ratio_a_over_b)).toFixed(1)}–${worst.ratio_a_over_b.toFixed(1)}× across simulators`);
   } else {
@@ -1031,15 +1299,18 @@ function renderScaling() {
   const runs = activeRuns().filter(r => isShown(r.b));
   const ids = visibleBackends().filter(e => isShown(e.id)).map(e => e.id);
   const val = r => pickTime(r, state.phase, state.clock);
+  const fitAll = !!state.ds.fitAll;
   const series = ids.map(id => {
     const pts = aggregate(runs.filter(r => r.b === id), val, false);
-    const slope = fitSlope(pts);
+    const slope = fitSlope(pts, fitAll), last = lastStep(pts);
     const e = info(id);
-    return { id, label: e.label, short: shortName(e), color: e.color, points: pts, exp: finite(slope) ? slope.toFixed(2) : "", tag: finite(slope) ? slope.toFixed(2) : "" };
+    return { id, label: e.label, short: shortName(e), color: e.color, dash: e.dash, points: pts, exp: finite(slope) ? slope.toFixed(2) : "", tag: finite(slope) ? slope.toFixed(2) : "", last: finite(last) ? last.toFixed(2) : "" };
   }).filter(s => s.points.length);
   const phaseName = { simulate: "simulate", oneoff: "build + prepare", total: "total" }[state.phase];
   const bio = state.ds.bioSeconds;
-  $("#scaling-sub").textContent = `${state.clock === "cpu" ? "CPU" : "Wall-clock"} ${phaseName} time${state.phase === "simulate" && bio === 1 ? " per simulated second" : ""} · ${state.ds.hasModes ? (state.mode === "matched" ? "matched settings, 5 measured runs per point" : "default settings, 1 run per point") : "your data"}`;
+  $("#scaling-sub").textContent = `${state.clock === "cpu" ? "CPU" : "Wall-clock"} ${phaseName} time${state.phase === "simulate" && bio === 1 ? " per simulated second" : state.phase === "simulate" && bio !== 1 ? ` per run of ${fmtTime(bio)} simulated` : ""} · ${state.ds.hasModes ? (state.mode === "matched" ? "matched settings, 5 measured runs per point" : "default settings, 1 run per point") : state.ds.scalingNote || "your data"}`;
+  if (fitAll) $("#scaling-cap").textContent = "Lines join medians of the measured runs; the shaded band spans the fastest to slowest run. Both axes are logarithmic. The label next to each line is the exponent b in time ∝ Nᵇ fitted over every size, as the source analysis does; the table adds the slope between the two largest sizes, which shows where a single exponent hides a change of regime.";
+  else $("#scaling-cap").innerHTML = SCALING_CAP;
   seriesLegend($("#scaling-legend"), series.map(s => s.id), "line");
   lineChart($("#scaling-chart"), {
     series, height: 400, xTitle: "Network size (neurons, log scale)",
@@ -1048,8 +1319,8 @@ function renderScaling() {
     refY: state.phase === "simulate" && bio === 1 ? 1 : null, refLabel: "Real time: 1 s of compute per simulated second", refShort: "Real time",
     tipNote: "Median, with fastest–slowest run in brackets",
   });
-  table($("#scaling-table"), ["Simulator", "Neurons", "Runs", "Median", "Fastest", "Slowest", "Exponent"],
-    series.flatMap(s => s.points.map(p => [s.label, fmtInt(p.n), String(p.count), fmtTime(p.med), fmtTime(p.min), fmtTime(p.max), s.tag])), [1, 2, 3, 4, 5, 6]);
+  table($("#scaling-table"), ["Simulator", "Neurons", "Runs", "Median", "Fastest", "Slowest", "Exponent", "Last step"],
+    series.flatMap(s => s.points.map(p => [s.label, fmtInt(p.n), String(p.count), fmtTime(p.med), fmtTime(p.min), fmtTime(p.max), s.tag, s.last])), [1, 2, 3, 4, 5, 6, 7]);
 }
 
 const PHASES = [
@@ -1093,12 +1364,22 @@ function renderCost() {
       be.appendChild(document.createTextNode(" Typical runs reuse compiled code; switch to First run to see the cold compile."));
     }
   } else be.appendChild(document.createTextNode("Show both Brian2 variants to see when compiling the whole model to C++ pays for itself."));
+  // configurations the source data itself flags as timing compilation rather than simulation
+  const cd = [...(ds.compileDominated || [])].filter(isShown);
+  if (cd.length) {
+    clear(be);
+    be.appendChild(h("b", { text: "Compilation, not simulation: " }));
+    be.appendChild(document.createTextNode(cd.map(id => `${info(id).label} is flagged in the source data as compile-dominated: it rebuilds its model on every run, so its ${fmtTime(median(typ.filter(r => r.b === id).map(r => r.t.simulate).filter(finite)))} “simulate” time at this size is mostly compilation.`).join(" ")));
+  }
 }
 
 function renderMemory() {
   const runs = activeRuns().filter(r => isShown(r.b));
   const ids = visibleBackends().filter(e => isShown(e.id)).map(e => e.id);
-  const series = ids.map(id => { const e = info(id); return { id, label: e.label, short: shortName(e), color: e.color, points: aggregate(runs.filter(r => r.b === id), r => r.mem.peak, false), band: false }; }).filter(s => s.points.length);
+  const series = ids.map(id => { const e = info(id); return { id, label: e.label, short: shortName(e), color: e.color, dash: e.dash, points: aggregate(runs.filter(r => r.b === id), r => r.mem.peak, false), band: false }; }).filter(s => s.points.length);
+  $("#memory-sub").textContent = state.ds.source === "snnbench"
+    ? "Resident set size of the measuring process, the higher of the build and simulate phases"
+    : "Resident set size of the whole process, including the library itself";
   seriesLegend($("#memory-legend"), series.map(s => s.id), "line");
   lineChart($("#memory-chart"), { series, height: 320, xTitle: "Network size (neurons, log scale)", yTitle: "Peak resident memory (log)", yFmt: fmtMB, tickFmt: fmtTickMB, aria: "Peak memory against network size", empty: "This dataset has no memory column." });
   const base = id => median(runs.filter(r => r.b === id).map(r => r.mem.base).filter(finite));
@@ -1111,10 +1392,11 @@ function renderEnergy() {
   const measured = runs.some(r => finite(r.energy));
   const ids = [...new Set(runs.map(r => r.b))];
   let rows, cap;
+  $("#w-core").closest("label").hidden = measured;
   if (measured) {
     rows = ids.map(id => { const e = info(id); return { id, label: e.label, short: shortName(e), color: e.color, v: median(runs.filter(r => r.b === id).map(r => r.energy).filter(finite)) }; });
-    $("#energy-sub").textContent = `Energy column from your file, labelled “${ds.energyLabel || "unlabelled"}” · N = ${fmtInt(n)}`;
-    cap = `Plotted as supplied. The label above is the method you declared when loading the file; values with different methods are not comparable with each other.`;
+    $("#energy-sub").textContent = ds.source === "snnbench" ? `Energy proxy recorded by the campaign (${ds.energyLabel}) · simulate phase · N = ${fmtInt(n)}` : `Energy column from your file, labelled “${ds.energyLabel || "unlabelled"}” · N = ${fmtInt(n)}`;
+    cap = ds.energyCaption || `Plotted as supplied. The label above is the method you declared when loading the file; values with different methods are not comparable with each other.`;
   } else {
     rows = ids.map(id => { const e = info(id); const cs = median(runs.filter(r => r.b === id).map(r => r.cpu.simulate).filter(finite)); return { id, label: e.label, short: shortName(e), color: e.color, v: cs * w, cs }; });
     $("#energy-sub").textContent = `Simulate phase at N = ${fmtInt(n)}, ${ds.bioSeconds === 1 ? "per simulated second" : "per run"}`;
@@ -1133,14 +1415,22 @@ function renderFidelity() {
   const fseg = clear($("#fidelity .seg"));
   fseg.parentElement.hidden = fmodes.length < 2;
   for (const m of fmodes) fseg.appendChild(h("button", { type: "button", "data-fmode": m, "aria-pressed": String(m === state.fmode), text: m === "native" ? "Default" : m === "matched" ? "Matched" : m }));
-  const fid = (ds.fidelity || []).filter(f => f.mode === state.fmode && isShown(f.backend) && f.backend !== "numpy_ref");
+  const fid = fidRows().filter(f => f.mode === state.fmode && isShown(f.backend) && !isRef(f.backend));
+  const countsOnly = fid.length && !fid.some(f => finite(f.exact_match));
+  $("#fidelity .sub").textContent = countsOnly
+    ? `Spike count against the plain-NumPy loop at each size${state.hw || ds.defaultHw ? `, ${state.hw || ds.defaultHw}` : ""}. Green: within 5%. Amber: within the campaign's ${Math.round((ds.tolerance || 0.35) * 100)}% tolerance. Red: outside it. Counts can agree while spike times differ, so green is necessary, not sufficient.`
+    : FID_SUB;
   if (!fid.length) { clear(host).appendChild(h("div", { class: "empty", text: "No spike-level comparison in this dataset. To add one, save each simulator's output spikes and compare them with a reference implementation." })); return; }
   const ns = [...new Set(fid.map(f => f.n_neurons))].sort((a, b) => a - b);
   const ids = visibleBackends().map(e => e.id).filter(id => fid.some(f => f.backend === id));
   const rows = ids.map(id => {
     const e = info(id);
     const name = h("span", { style: "display:inline-flex;gap:6px;align-items:center;font-weight:600" }, h("span", { class: "swatch", style: `background:${e.color}` }), e.label);
-    return [name, ...ns.map(n => { const f = fid.find(x => x.backend === id && x.n_neurons === n); const v = verdict(f); return h("span", { class: "fid-cell " + v.cls, title: f ? `${v.text}: exact ${fmtPct(f.exact_match, 2)}, spikes ${fmtPct(f.count_rel_err, 2)}, rate r = ${finite(f.rate_corr) ? f.rate_corr.toFixed(4) : "–"}, Γ = ${finite(f.gamma_1ms) ? f.gamma_1ms.toFixed(3) : "–"}` : "not run", text: f ? fmtPct(f.exact_match, f.exact_match >= 0.999 && f.exact_match < 1 ? 2 : 1) : "–" }); })];
+    return [name, ...ns.map(n => {
+      const f = fid.find(x => x.backend === id && x.n_neurons === n), v = verdict(f);
+      if (countsOnly) return h("span", { class: "fid-cell " + v.cls, title: f ? `${v.text}: ${fmtInt(f.n_spikes)} spikes against ${fmtInt(f.n_spikes_ref)}` : "not run", text: f ? signedPct(f.count_rel_err) : "–" });
+      return h("span", { class: "fid-cell " + v.cls, title: f ? `${v.text}: exact ${fmtPct(f.exact_match, 2)}, spikes ${fmtPct(f.count_rel_err, 2)}, rate r = ${finite(f.rate_corr) ? f.rate_corr.toFixed(4) : "–"}, Γ = ${finite(f.gamma_1ms) ? f.gamma_1ms.toFixed(3) : "–"}` : "not run", text: f ? fmtPct(f.exact_match, f.exact_match >= 0.999 && f.exact_match < 1 ? 2 : 1) : "–" });
+    })];
   });
   table(host, ["Simulator", ...ns.map(n => fmtN(n))], rows);
   for (const id of ids) {
@@ -1174,8 +1464,11 @@ function renderDrift() {
     $("#drift-sub").textContent = ""; $("#drift-cap").textContent = ""; return;
   }
   const rows = d.rows.filter(r => isShown(r.backend)).sort((a, b) => b.ratio_a_over_b - a.ratio_a_over_b);
-  const a = (d.machine && d.machine.cpu_model || "Host A").replace(/\(R\)/g, ""), b = ((state.ds.meta && state.ds.meta.machine && state.ds.meta.machine.cpu_model) || "Host B").replace(/\(R\)/g, "");
+  const sess = !!d.sessions;
+  $("#drift h2").textContent = sess ? "Same machine, a second session" : "Same code, another machine";
+  const a = sess ? d.labelA : (d.machine && d.machine.cpu_model || "Host A").replace(/\(R\)/g, ""), b = sess ? d.labelB : ((state.ds.meta && state.ds.meta.machine && state.ds.meta.machine.cpu_model) || "Host B").replace(/\(R\)/g, "");
   $("#drift-sub").textContent = `Median simulate time at N = ${fmtInt(rows[0] ? rows[0].n_neurons : 0)}, ring = ${a}, dot = ${b}`;
+  if (!rows.length) { clear(host).appendChild(h("div", { class: "empty", text: "Every simulator in this comparison is hidden." })); $("#drift-cap").textContent = ""; return; }
   clear(host);
   const W = Math.max(320, host.clientWidth || 520), narrow = W < 520, rowH = 28, m = { l: narrow ? 104 : 150, r: 58, t: 6, b: 34 };
   const H = m.t + rows.length * rowH + m.b;
@@ -1192,11 +1485,13 @@ function renderDrift() {
     svg("circle", { cx: x(r.host_b_s), cy, r: 4.5, style: `fill:${e.color};stroke:var(--surface)`, "stroke-width": 2 }, root);
     svg("text", { x: W - m.r + 8, y: cy + 4, class: "bar-label" }, root).textContent = r.ratio_a_over_b.toFixed(2) + "×";
     const hitA = svg("rect", { x: m.l, y: cy - rowH / 2, width: W - m.r - m.l, height: rowH, fill: "transparent" }, root);
-    hitA.addEventListener("pointermove", evt => showTip(evt, e.label, [{ color: e.color, value: fmtTime(r.host_a_s), label: a }, { color: e.color, value: fmtTime(r.host_b_s), label: b }], `${r.ratio_a_over_b.toFixed(2)}× slower on the first machine`));
+    hitA.addEventListener("pointermove", evt => showTip(evt, e.label, [{ color: e.color, value: fmtTime(r.host_a_s), label: a }, { color: e.color, value: fmtTime(r.host_b_s), label: b }], sess ? `${r.ratio_a_over_b.toFixed(2)}× (${a} ÷ ${b})` : `${r.ratio_a_over_b.toFixed(2)}× slower on the first machine`));
     hitA.addEventListener("pointerleave", hideTip);
   });
-  svg("text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle", class: "axis-title" }, root).textContent = "Seconds per simulated second (log)";
-  $("#drift-cap").textContent = "The cloud session moved to a different machine partway through the first campaign. Those partial runs were set aside, and the full campaign was rerun on the second machine. Ratios between simulators also changed, so a ranking measured on one CPU is not guaranteed on another.";
+  svg("text", { x: (m.l + W - m.r) / 2, y: H - 4, "text-anchor": "middle", class: "axis-title" }, root).textContent = state.ds.bioSeconds === 1 ? "Seconds per simulated second (log)" : "Seconds per run (log)";
+  $("#drift-cap").textContent = sess
+    ? `${b} repeated ${a} ${finite(d.minutes) ? Math.round(d.minutes) + " minutes later " : ""}on the same machine with the same code. Where a ratio moves away from 1, the ranking moved without any change to code or hardware.`
+    : "The cloud session moved to a different machine partway through the first campaign. Those partial runs were set aside, and the full campaign was rerun on the second machine. Ratios between simulators also changed, so a ranking measured on one CPU is not guaranteed on another.";
 }
 
 function interp(points, n) {
@@ -1219,7 +1514,9 @@ function interp(points, n) {
 function renderHelper() {
   const N = Math.max(1, +$("#h-n").value || 10000), T = Math.max(0.001, +$("#h-t").value || 1), R = Math.max(1, Math.round(+$("#h-r").value || 1));
   const needGrad = $("#h-grad").checked, needGpu = $("#h-gpu").checked, needExact = $("#h-exact").checked;
-  const ds = state.ds, runs = activeRuns().filter(r => isShown(r.b) && r.b !== "numpy_ref");
+  $("#choose").hidden = $("#nav-choose").hidden = !!state.ds.noHelper;
+  if (state.ds.noHelper) return;
+  const ds = state.ds, runs = activeRuns().filter(r => isShown(r.b) && !isRef(r.b));
   const ids = [...new Set(runs.map(r => r.b))];
   const res = ids.map(id => {
     const rr = runs.filter(r => r.b === id), e = info(id);
@@ -1229,13 +1526,14 @@ function renderHelper() {
     const extraFirst = finite(first.v) && finite(one.v) ? Math.max(0, first.v - one.v) : 0;
     const total = sim.v * (T / ds.bioSeconds) * R + one.v * R + extraFirst;
     const caps = CAPS[id] || { grad: false, gpu: false };
-    const fidRows = (ds.fidelity || []).filter(f => f.backend === id && f.mode === state.mode);
-    const exactOK = fidRows.length ? fidRows.every(f => f.exact_match >= 0.999) : null;
+    const fr = fidRows().filter(f => f.backend === id && f.mode === state.mode);
+    const countsOnly = fr.length && !fr.some(f => finite(f.exact_match));
+    const exactOK = !fr.length ? null : countsOnly ? fr.every(f => Math.abs(f.count_rel_err) <= (ds.tolerance || 0.35)) : fr.every(f => f.exact_match >= 0.999);
     const why = [];
     if (needGrad && !caps.grad) why.push("no gradient training");
     if (needGrad && typeof caps.grad === "string") why.push("training needs " + caps.grad);
     if (needGpu && !caps.gpu) why.push("no GPU path");
-    if (needExact && exactOK === false) why.push("did not reproduce the reference spikes");
+    if (needExact && exactOK === false) why.push(countsOnly ? "spike count outside tolerance at some size" : "did not reproduce the reference spikes");
     const hard = (needGrad && !caps.grad) || (needGpu && !caps.gpu) || (needExact && exactOK === false);
     return { id, e, total, sim: sim.v, one: one.v, ex: sim.ex || one.ex, why, hard, caps, exactOK };
   }).filter(r => finite(r.total)).sort((a, b) => (a.hard - b.hard) || (a.total - b.total));
@@ -1295,24 +1593,205 @@ function renderMethods() {
         h("p", null, h("b", { text: "Matched: " }), b.notes && b.notes.matched || "–"),
         h("p", null, h("b", { text: "Default: " }), b.notes && b.notes.native || "–")));
     }
+  } else if (ds.source === "snnbench") {
+    const c = m.config || {}, mc = m.machine || {};
+    add(dl, "Model", `Leaky integrate-and-fire; N Poisson sources drive N neurons, ${c.FANIN ?? "?"} inputs per neuron`);
+    add(dl, "Membrane", `τ = ${c.TAU_MS} ms, threshold ${c.V_THRESH}, reset ${c.V_RESET} (normalised units)`);
+    add(dl, "Input", `${c.INPUT_RATE_HZ} Hz Poisson per source, weight ${c.SYN_WEIGHT}, seed ${c.SEED}`);
+    add(dl, "Time", `dt = ${c.DT_MS} ms, ${c.SIM_MS} ms simulated per run (${Math.round(c.SIM_MS / c.DT_MS)} steps)`);
+    add(dl, "Sizes", (c.SIZES || sizes()).map(fmtInt).join(", ") + " neurons");
+    add(dl, "Repetitions", `${c.WARMUP_RUNS} warm-up runs discarded and ${c.MEASURED_RUNS} measured per condition, in each session`);
+    add(dl, "Sessions", m.groups.join("; "));
+    if (ds.training.length) add(dl, "Training", `MNIST (${c.MNIST_INPUTS} inputs, ${c.MNIST_CLASSES} classes), ${c.TRAIN_SIM_MS} ms per sample at dt = ${c.TRAIN_DT_MS} ms`);
+    const el = clear($("#env-list"));
+    add(el, "Machine", `${mc.hostname || "–"} · ${(mc.cpu || "–").replace(/\(R\)|\(TM\)/g, "")}`);
+    add(el, "Cores / memory", `${mc.logical_cores ?? "?"} logical cores, ${mc.ram_gb ?? "?"} GB`);
+    add(el, "OS", mc.os || "–");
+    add(el, "Python", mc.python || "–");
+    add(el, "Accelerator", mc.accelerator || "–");
+    add(el, "Energy proxy", `runtime × utilisation × ${c.TDP_CPU_W} W (${c.TDP_CPU_SOURCE || "datasheet value"})`);
+    add(el, "Versions", Object.entries(m.packages || {}).map(([k, v]) => `${k} ${v}`).join(", "));
+    const nl = clear($("#notes-list"));
+    for (const b of ds.backendNotes || []) { const e = info(b.id); nl.appendChild(h("div", null, h("div", { class: "who" }, h("span", { class: "swatch", style: `background:${e.color}` }), e.label), h("p", { text: b.text }))); }
   } else {
     add(dl, "Source", ds.name); add(dl, "Rows", ds.runs.length.toLocaleString("en-US"));
     add(dl, "Mapped columns", Object.entries(ds.mapping || {}).filter(([, v]) => v).map(([k, v]) => `${k} ← ${v}`).join(", "));
     clear($("#env-list")); add($("#env-list"), "Environment", "Recorded in your file, if at all"); clear($("#notes-list"));
   }
+  $("#rerun-pilot").hidden = ds.source !== "pilot";
   // aggregated data table + CSV
   const runs = activeRuns().filter(r => isShown(r.b));
   const sim = aggregate(runs, r => r.t.simulate, false), mem = aggregate(runs, r => r.mem.peak, false), cpu = aggregate(runs, r => r.cpu.simulate, false);
   const rows = sim.map(a => { const mm = mem.find(x => x.b === a.b && x.n === a.n), cc = cpu.find(x => x.b === a.b && x.n === a.n), f = fidFor(a.b, a.n, state.mode);
-    return [info(a.b).label, a.n, a.count, a.med, a.min, a.max, a.cv, mm ? mm.med : NaN, cc ? cc.med : NaN, f ? f.exact_match : NaN]; });
-  state.csvRows = [["simulator", "n_neurons", "runs", "simulate_median_s", "simulate_min_s", "simulate_max_s", "simulate_cv", "peak_rss_median_mb", "simulate_cpu_median_s", "exact_match"], ...rows];
-  table($("#data-table"), ["Simulator", "Neurons", "Runs", "Simulate (median)", "Fastest", "Slowest", "CV", "Peak memory", "CPU time", "Exact match"],
-    rows.map(r => [r[0], fmtInt(r[1]), String(r[2]), fmtTime(r[3]), fmtTime(r[4]), fmtTime(r[5]), fmtPct(r[6]), fmtMB(r[7]), fmtTime(r[8]), fmtPct(r[9], 2)]), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-  $("#foot-build").textContent = ds.source === "pilot" ? "Pilot data measured by the benchmark harness in this repository (pilot/). Replace it with your own campaign through Load your results." : "Charts reflect your file; nothing was uploaded.";
+    return [info(a.b).label, a.n, a.count, a.med, a.min, a.max, a.cv, mm ? mm.med : NaN, cc ? cc.med : NaN, f ? f.exact_match : NaN, f ? f.count_rel_err : NaN]; });
+  state.csvRows = [["simulator", "n_neurons", "runs", "simulate_median_s", "simulate_min_s", "simulate_max_s", "simulate_cv", "peak_rss_median_mb", "simulate_cpu_median_s", "exact_match", "spike_count_err"], ...rows];
+  table($("#data-table"), ["Simulator", "Neurons", "Runs", "Simulate (median)", "Fastest", "Slowest", "CV", "Peak memory", "CPU time", "Exact match", "Count error"],
+    rows.map(r => [r[0], fmtInt(r[1]), String(r[2]), fmtTime(r[3]), fmtTime(r[4]), fmtTime(r[5]), fmtPct(r[6]), fmtMB(r[7]), fmtTime(r[8]), fmtPct(r[9], 2), signedPct(r[10])]), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  $("#foot-build").textContent = ds.source === "pilot" ? "Pilot data measured by the benchmark harness in this repository (pilot/). Replace it with your own campaign through Load your results." : ds.source === "snnbench" ? "Read directly from the campaign's benchmarks.db; nothing was uploaded or altered." : "Charts reflect your file; nothing was uploaded.";
+}
+
+/* ---------- training: cost against what was learned ---------- */
+const budgetKey = t => `${t.train_n}|${t.epochs}|${t.hidden}`;
+const budgetLabel = t => `${fmtInt(t.train_n)} images × ${t.epochs} epochs · hidden ${t.hidden}`;
+function renderTraining() {
+  const ds = state.ds, sec = $("#training");
+  sec.hidden = $("#nav-training").hidden = !(ds.training && ds.training.length);
+  if (sec.hidden) return;
+  const budgets = [...new Map(ds.training.map(t => [budgetKey(t), t])).values()].sort((a, b) => b.train_n * b.epochs - a.train_n * a.epochs || a.hidden - b.hidden);
+  if (!budgets.some(t => budgetKey(t) === state.trainBudget)) state.trainBudget = budgetKey(budgets[0]);
+  const seg = clear($("#train-seg"));
+  for (const t of budgets) seg.appendChild(h("button", { type: "button", "data-train": budgetKey(t), "aria-pressed": String(budgetKey(t) === state.trainBudget), text: budgetLabel(t) }));
+  const all = ds.training.filter(t => budgetKey(t) === state.trainBudget), rows = all.filter(t => isShown(t.b));
+  const c = (ds.meta && ds.meta.config) || {}, classes = +c.MNIST_CLASSES || 10, chance = 100 / classes;
+  $("#training-sub").textContent = `${budgetLabel(all[0])} · ${all.length} of ${new Set(ds.training.map(t => t.b)).size} configurations ran at this budget · test accuracy against total training time`;
+  // scatter: total wall time (log) against test accuracy, with the chance line
+  const host = clear($("#training-chart"));
+  const pts = rows.filter(t => finite(t.wall) && t.wall > 0 && finite(t.acc));
+  if (!pts.length) host.appendChild(h("div", { class: "empty", text: "No training runs shown at this budget." }));
+  else {
+    const W = Math.max(320, host.clientWidth || 800), narrow = W < 560, H = 330;
+    const m = { l: narrow ? 44 : 54, r: narrow ? 14 : 24, t: 14, b: 44 };
+    const x0 = 10 ** Math.floor(Math.log10(Math.min(...pts.map(t => t.wall)))), x1 = 10 ** Math.ceil(Math.log10(Math.max(...pts.map(t => t.wall))));
+    const x = logScale(x0, x1, m.l, W - m.r), y = linScale(0, 100, H - m.b, m.t);
+    const root = svg("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Test accuracy against total training time for each configuration" }, host);
+    for (let v = 0; v <= 100; v += 20) {
+      svg("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), class: v ? "grid-line" : "base-line" }, root);
+      svg("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end", class: "tick-label" }, root).textContent = v + "%";
+    }
+    for (const t of logTicks(x0, x1).filter(t => t.major)) {
+      svg("line", { x1: x(t.v), x2: x(t.v), y1: m.t, y2: H - m.b, class: "grid-line" }, root);
+      svg("text", { x: x(t.v), y: H - m.b + 16, "text-anchor": "middle", class: "tick-label" }, root).textContent = fmtTime(t.v);
+    }
+    svg("line", { x1: m.l, x2: W - m.r, y1: y(chance), y2: y(chance), class: "ref-line", "stroke-dasharray": "5 4" }, root);
+    svg("text", { x: m.l + 6, y: y(chance) - 6, class: "ref-label" }, root).textContent = `Chance: ${chance}% for ${classes} classes`;
+    svg("text", { x: (m.l + W - m.r) / 2, y: H - 6, "text-anchor": "middle", class: "axis-title" }, root).textContent = "Total training time (log scale)";
+    const yt = svg("text", { x: 12, y: (m.t + H - m.b) / 2, "text-anchor": "middle", class: "axis-title", transform: `rotate(-90 12 ${(m.t + H - m.b) / 2})` }, root); yt.textContent = "Test accuracy";
+    const placed = [], atChance = t => t.acc <= chance + 2;
+    for (const t of [...pts].sort((a, b) => b.acc - a.acc || a.wall - b.wall)) {
+      const e = info(t.b), cx = x(t.wall), cy = y(t.acc);
+      const dot = svg("circle", { cx, cy, r: 6, style: `fill:${e.color};stroke:var(--surface)`, "stroke-width": 2, tabindex: 0 }, root);
+      const show = evt => showTip(evt, e.label, [{ color: e.color, value: t.acc.toFixed(1) + "%", label: "test accuracy" }, { color: e.color, value: fmtTime(t.wall), label: "total training time" }, { color: e.color, value: t.perEpoch ? fmtTime(t.t) : "–", label: "per epoch" }], t.rule.split(/\.\s|,\s/)[0]);
+      dot.addEventListener("pointermove", show); dot.addEventListener("pointerleave", hideTip);
+      dot.addEventListener("focus", () => { const b = dot.getBoundingClientRect(); show({ clientX: b.right, clientY: b.top }); }); dot.addEventListener("blur", hideTip);
+      if (atChance(t)) continue;   // the chance-level cluster gets one shared annotation below
+      const label = narrow ? shortName(e) : e.label, w = label.length * 6.6 + 4;
+      let ly = cy + 4;
+      for (const off of [0, -14, 14, -28, 28, -42, 42]) {
+        const cand = cy + 4 + off;
+        if (!placed.some(p => Math.abs(p.y - cand) < 13 && cx + 10 < p.x + p.w && p.x < cx + 10 + w)) { ly = cand; break; }
+      }
+      const right = cx + 10 + w < W - m.r;
+      placed.push({ x: right ? cx + 10 : cx - 10 - w, y: ly, w });
+      svg("text", { x: right ? cx + 10 : cx - 10, y: ly, "text-anchor": right ? "start" : "end", class: "end-label", style: "font-size:11.5px" }, root).textContent = label;
+    }
+    // one bracketed note for every run that ended at chance
+    const low = pts.filter(atChance).sort((a, b) => a.wall - b.wall);
+    if (low.length) {
+      const xa = Math.min(...low.map(t => x(t.wall))) - 8, xb = Math.max(...low.map(t => x(t.wall))) + 8, top = Math.min(...low.map(t => y(t.acc)));
+      svg("path", { d: `M${xa},${top - 10} v-6 H${xb} v6`, fill: "none", class: "leader" }, root);
+      const names = low.map(t => shortName(info(t.b))), per = narrow ? 3 : names.length;
+      const lines = [`At or below chance (${low.length})`];
+      for (let i = 0; i < names.length; i += per) lines.push(names.slice(i, i + per).join(" · "));
+      const wTxt = Math.max(...lines.map(l => l.length)) * 6.4;
+      let tx = (xa + xb) / 2, anchor = "middle";
+      if (tx + wTxt / 2 > W - m.r) { tx = W - m.r; anchor = "end"; }
+      if (anchor === "middle" && tx - wTxt / 2 < m.l) { tx = m.l + 4; anchor = "start"; }
+      lines.forEach((ln, i) => svg("text", { x: tx, y: top - 22 - (lines.length - 1 - i) * 14, "text-anchor": anchor, class: i ? "tick-label" : "end-label", style: "font-size:11.5px" }, root).textContent = ln);
+    }
+  }
+  // table with the flags each row earns
+  const flagsOf = t => {
+    const f = [];
+    if (finite(t.acc) && t.acc <= chance + 2) f.push(["bad", "at chance"]);
+    if (t.whole) f.push(["warn", "one solve, not per epoch"]);
+    const k = (ds.threadsOf || {})[t.b];
+    if (k && finite(t.cpuPct) && t.cpuPct > 100 * k * 1.05) f.push(["bad", `CPU above ${100 * k}%`]);
+    return f;
+  };
+  const trs = rows.slice().sort((a, b) => b.acc - a.acc);
+  table($("#training-table"), ["Simulator", "Learning rule", "Accuracy", "Total time", "Per epoch", "CPU", "Peak memory", "Energy proxy", "Flags"],
+    trs.map(t => { const e = info(t.b); return [
+      h("span", { style: "display:inline-flex;gap:6px;align-items:center;font-weight:600;white-space:nowrap" }, h("span", { class: "swatch", style: `background:${e.color}` }), e.label),
+      h("span", { title: t.rule, text: t.rule.length > 70 ? t.rule.slice(0, 68) + "…" : t.rule }),
+      finite(t.acc) ? t.acc.toFixed(2) + "%" : "–", fmtTime(t.wall), t.perEpoch ? fmtTime(t.t) : "–",
+      finite(t.cpuPct) ? Math.round(t.cpuPct) + "%" : "–", fmtMB(t.mem), fmtJ(t.energy),
+      h("span", { style: "display:inline-flex;gap:4px;flex-wrap:wrap" }, ...flagsOf(t).map(([cls, txt]) => h("span", { class: "fid-cell " + cls, text: txt }))),
+    ]; }), [2, 3, 4, 5, 6, 7]);
+  const nChance = all.filter(t => finite(t.acc) && t.acc <= chance + 2).length;
+  const whole = all.filter(t => t.whole).map(t => info(t.b).label);
+  $("#training-cap").textContent = (nChance ? `${nChance} of ${all.length} configurations finish at or below chance: their time is the cost of a learning rule that did not learn, so it cannot be traded against the others' accuracy. ` : "")
+    + `The learning rules differ by simulator, so these costs compare algorithms as much as simulators.`
+    + (whole.length ? ` ${[...new Set(whole)].join(", ")}: the recorded time is one closed-form solve, so total time is the fair comparison, not time per epoch.` : "");
+}
+
+/* ---------- checks: what the data itself says about the claims it can support ---------- */
+function renderChecks() {
+  const ds = state.ds, sec = $("#checks"), list = clear($("#checks-list"));
+  sec.hidden = $("#nav-checks").hidden = ds.source !== "snnbench";
+  if (sec.hidden) return;
+  const out = [], add = (cls, tag, title, body) => out.push({ cls, tag, title, body });
+  const tol = ds.tolerance || 0.35, T = Math.round(tol * 100), hw = state.hw || ds.defaultHw;
+  const runs = ds.runs.filter(r => r.ok && (!hw || r.hw === hw)), sweep = runs.filter(r => r.task === ds.defaultTask);
+  const fid = fidRows().filter(f => !isRef(f.backend));
+  const ns = [...new Set(fid.map(f => f.n_neurons))].sort((a, b) => a - b);
+  // equivalence
+  const outside = fid.filter(f => Math.abs(f.count_rel_err) > tol);
+  if (outside.length) {
+    const worst = [...new Set(outside.map(f => f.backend))].map(b => outside.filter(f => f.backend === b).reduce((a, c) => Math.abs(c.count_rel_err) > Math.abs(a.count_rel_err) ? c : a));
+    const failN = ns.filter(n => fid.some(f => f.n_neurons === n && Math.abs(f.count_rel_err) > tol)), okN = ns.filter(n => !failN.includes(n));
+    const inferN = [...new Set(runs.filter(r => r.task !== ds.defaultTask).map(r => r.n))].filter(n => failN.includes(n));
+    const list = a => a.map(fmtInt).join(", ");
+    add("bad", "Equivalence", `Outside the ${T}% count tolerance`, `${worst.map(w => `${info(w.backend).label} ${signedPct(w.count_rel_err, 0)} at N = ${fmtInt(w.n_neurons)}`).join("; ")}. ${okN.length ? `Every configuration passes at N = ${list(okN)}, but not at N = ${list(failN)}` : `No size passes for every configuration`}${inferN.length ? `, the size the separate inference task runs at` : ""}. A check run at one size does not certify the others.`);
+  } else if (fid.length) add("good", "Equivalence", `Within ${T}% everywhere`, `Every configuration's spike count stays within ${T}% of the reference at every size.`);
+  const big = ns.slice(-2);
+  const sys = [...new Set(fid.map(f => f.backend))].map(b => ({ b, e: big.map(n => (fid.find(f => f.backend === b && f.n_neurons === n) || {}).count_rel_err) })).filter(o => o.e.every(finite) && (o.e.every(v => v < -0.1) || o.e.every(v => v > 0.1)));
+  if (sys.length) add("warn", "Equivalence", "A one-sided offset the tolerance absorbs", `${sys.map(o => `${info(o.b).label} ${o.e.map(v => signedPct(v, 0)).join(" and ")}`).join("; ")} at N = ${big.map(fmtInt).join(" and ")}. A count that stays on one side of the reference points to a modelling difference (threshold rule, delay, input) rather than noise.`);
+  for (const f of fid.filter(f => f.cause)) add("bad", "Equivalence", "Same configuration, different spikes", f.cause);
+  // processor utilisation against what the thread count allows
+  const over = [];
+  for (const [id, k] of Object.entries(ds.threadsOf || {})) {
+    const rr = runs.filter(r => r.b === id && finite(r.cpuPct)), bad = rr.filter(r => r.cpuPct > 100 * k * 1.05);
+    if (bad.length) over.push(`${info(id).label}: ${bad.length} of ${rr.length} runs above ${100 * k}%, up to ${Math.round(Math.max(...bad.map(r => r.cpuPct)))}%`);
+  }
+  if (over.length) add("bad", "Instrument", "CPU readings above the thread ceiling", `${over.join("; ")}. A process limited to k threads cannot exceed k × 100% of one core, so these readings count something other than the simulator's own threads, and the energy proxy built on them inherits the error.`);
+  // scaling regimes
+  const flat = [], curve = [];
+  for (const id of [...new Set(sweep.map(r => r.b))]) {
+    const pts = aggregate(sweep.filter(r => r.b === id), r => r.t.simulate, false), k = fitSlope(pts, true), l = lastStep(pts);
+    if (finite(k) && k < 0.1) flat.push(`${info(id).label} (${k.toFixed(3)})`);
+    else if (finite(k) && finite(l) && l - k > 0.5) curve.push(`${info(id).label} ${k.toFixed(2)} overall, ${l.toFixed(2)} at the top`);
+  }
+  if (flat.length) add("warn", "Scaling", "Runtime that does not respond to size", `${flat.join(", ")}: a ${ns.length > 1 ? Math.round(ns[ns.length - 1] / ns[0]) + "-fold" : ""} larger network costs about the same, so the sweep never leaves their fixed per-run cost. A near-zero exponent here means overhead dominates, not that they scale best.`);
+  if (curve.length) add("warn", "Scaling", "One exponent hides a change of regime", `${curve.join("; ")} (between N = ${big.map(fmtInt).join(" and ")}). Growth steepens at the top of the sweep, so the overall exponent underestimates the cost of larger networks.`);
+  // memory baseline
+  const n0 = ns[0], ids = [...new Set(sweep.map(r => r.b))];
+  const memAt = id => median(sweep.filter(r => r.b === id && r.n === n0).map(r => r.mem.peak).filter(finite));
+  const refs = ids.filter(isRef).map(id => ({ id, v: memAt(id) })).filter(o => finite(o.v)).sort((a, b) => b.v - a.v);
+  const low = ids.filter(id => !isRef(id)).map(id => ({ id, v: memAt(id) })).filter(o => finite(o.v)).sort((a, b) => a.v - b.v)[0];
+  if (refs.length && low && refs[0].v > 2 * low.v) add("warn", "Memory", "Peak memory measures the process, not the simulator", `At N = ${fmtInt(n0)} the plain-NumPy control, which allocates almost nothing, peaks at ${fmtMB(refs[0].v)}, while ${info(low.id).label} peaks at ${fmtMB(low.v)}. The figure includes whatever else the measuring process had loaded, so gaps between simulators measured in different processes are not theirs.`);
+  // building the network can need more memory than simulating it
+  const nTop = ns[ns.length - 1];
+  const gaps = ids.map(id => { const rr = sweep.filter(r => r.b === id && r.n === nTop); return { id, su: median(rr.map(r => r.mem.setup).filter(finite)), si: median(rr.map(r => r.mem.sim).filter(finite)) }; }).filter(o => finite(o.su) && finite(o.si) && o.su > 1.3 * o.si);
+  if (gaps.length) add("warn", "Memory", "Building the network needs more memory than simulating it", `At N = ${fmtInt(nTop)}: ${gaps.map(o => `${info(o.id).label} ${fmtMB(o.su)} while building against ${fmtMB(o.si)} while simulating`).join("; ")}. A peak quoted from the simulate phase alone understates the memory needed to run the model; the memory chart here uses the higher of the two.`);
+  // the energy proxy
+  const ratios = runs.filter(r => finite(r.energy) && finite(r.cpu.simulate) && r.cpu.simulate > 0).map(r => r.energy / r.cpu.simulate);
+  if (ratios.length > 10) { const mu = mean(ratios), cv = sd(ratios) / mu; if (cv < 0.01) add("warn", "Energy", "The energy column is CPU time in other units", `Every recorded energy value equals CPU-seconds × ${mu.toFixed(1)} W (spread ${fmtPct(cv, 2)}). It cannot rank configurations differently from CPU time, and its joules charge a whole processor's rated power to each busy core.`); }
+  // workload scale
+  const c = (ds.meta && ds.meta.config) || {};
+  const conds = aggregate(sweep, r => r.t.simulate, false), quick = conds.filter(a => a.med < 0.2).length;
+  if (finite(+c.SIM_MS) && conds.length) add(quick > conds.length / 2 ? "warn" : "good", "Workload", `${c.SIM_MS} ms simulated per run`, `${quick} of ${conds.length} sweep conditions finish in under 200 ms, where fixed per-call costs weigh as much as the simulation itself. Rankings at this scale do not extrapolate to longer simulations${ds.noHelper ? ", so the decision helper is switched off for this dataset" : ""}.`);
+  // training
+  const trn = ds.training || [], classes = +c.MNIST_CLASSES || 10, chance = 100 / classes;
+  const atChance = trn.filter(t => finite(t.acc) && t.acc <= chance + 2);
+  if (atChance.length) add("bad", "Training", "Training runs that did not learn", `${atChance.length} of ${trn.length} training runs (${[...new Set(atChance.map(t => info(t.b).label.split(" · ")[0]))].join(", ")}) finish at or below chance: ${Math.min(...atChance.map(t => t.acc)).toFixed(1)}–${Math.max(...atChance.map(t => t.acc)).toFixed(1)}% for ${classes} classes. Their time per epoch is the cost of a rule that did not learn, and each simulator trains with a different rule, so training cost compares algorithms as much as simulators.`);
+  const whole = [...new Set(trn.filter(t => t.whole).map(t => info(t.b).label))];
+  if (whole.length) add("warn", "Training", "A time per epoch that is not per epoch", `${whole.join(", ")}: the recorded time equals the whole training run, one closed-form solve, while the other rows are per epoch. Compare total training time instead.`);
+  const rank = { bad: 0, warn: 1, good: 2 };
+  for (const o of out.sort((a, b) => rank[a.cls] - rank[b.cls])) list.appendChild(h("article", { class: "check " + o.cls }, h("span", { class: "tag", text: o.tag }), h("h3", { text: o.title }), h("p", { text: o.body })));
 }
 
 function renderAll() {
-  renderSource(); renderFilters(); renderHero(); renderKPIs(); renderScaling(); renderCost(); renderMemory(); renderEnergy(); renderFidelity(); renderCV(); renderDrift(); renderHelper(); renderMethods();
+  renderSource(); renderFilters(); renderHero(); renderKPIs(); renderChecks(); renderScaling(); renderCost(); renderMemory(); renderEnergy(); renderFidelity(); renderTraining(); renderCV(); renderDrift(); renderHelper(); renderMethods();
   $$("[data-mode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === state.mode)));
   $$("[data-phase]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.phase === state.phase)));
   $$("[data-clock]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.clock === state.clock)));
@@ -1327,6 +1806,7 @@ document.addEventListener("click", e => {
   else if (b.dataset.clock) { state.clock = b.dataset.clock; renderAll(); }
   else if (b.dataset.run) { state.run = b.dataset.run; renderCost(); }
   else if (b.dataset.fmode) { state.fmode = b.dataset.fmode; renderFidelity(); }
+  else if (b.dataset.train) { state.trainBudget = b.dataset.train; renderTraining(); }
   else if (b.dataset.table) { const t = $("#" + b.dataset.table + "-table"); t.hidden = !t.hidden; b.textContent = t.hidden ? "Show as table" : "Hide table"; }
 });
 $("#sel-n").addEventListener("change", e => { state.focusN = +e.target.value; renderCost(); renderEnergy(); });
@@ -1338,7 +1818,7 @@ $("#copy-csv").addEventListener("click", () => {
   const fallback = () => { const ta = h("textarea", { style: "width:100%;height:140px;margin-top:8px", "aria-label": "CSV" }); ta.value = csv; $("#data-table").before(ta); ta.select(); msg.textContent = "Clipboard unavailable; the CSV is selected below, copy it with Ctrl+C."; };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(csv).then(() => { msg.textContent = `Copied ${state.csvRows.length - 1} rows.`; }, fallback); else fallback();
 });
-let rT; new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(() => { if (state.ds) { renderScaling(); renderCost(); renderMemory(); renderEnergy(); renderDrift(); } }, 120); }).observe(document.body);
+let rT; new ResizeObserver(() => { clearTimeout(rT); rT = setTimeout(() => { if (state.ds) { renderHero(); renderScaling(); renderCost(); renderMemory(); renderEnergy(); renderTraining(); renderDrift(); } }, 120); }).observe(document.body);
 
 /* ---------- loader ---------- */
 const ROLES = [
@@ -1387,6 +1867,7 @@ function readFile(file) {
       if (/\.json$/.test(lower) || /^\s*[\[{]/.test(text)) {
         const j = JSON.parse(text);
         if (j && j.kind === "snn-benchmark-pilot") { state.ds = fromPilot(j); state.ds.source = "file"; state.ds.name = name; finishLoad(); return; }
+        if (j && j.kind === "snnbench-db") { state.ds = fromSnnbench(j.tables, j.title || name); finishLoad(); return; }
         const rows = Array.isArray(j) ? j : (j.runs || j.rows || j.data || j.results);
         if (!Array.isArray(rows) || !rows.length) throw new Error("No array of result rows found. Expected a list of objects, or an object with a runs/rows/data field.");
         startMapping(rows, name);
@@ -1418,6 +1899,14 @@ function readSqlite(bytes, name) {
     const names = tables.length ? tables[0].values.map(v => v[0]) : [];
     if (!names.length) throw new Error("The database has no tables.");
     const info = names.map(t => { const c = db.exec(`SELECT COUNT(*) FROM "${t.replace(/"/g, '""')}"`)[0].values[0][0]; const cols = db.exec(`PRAGMA table_info("${t.replace(/"/g, '""')}")`)[0].values.map(v => v[1]); return { t, c, cols }; });
+    // an snnbench campaign database is read as a whole, with no column mapping
+    const runsT = info.find(x => x.t === "runs");
+    if (runsT && info.some(x => x.t === "conditions") && ["framework", "backend", "phase", "run_index", "runtime_s"].every(c => runsT.cols.includes(c))) {
+      const all = t => { const res = db.exec(`SELECT * FROM "${t}"`); return res.length ? { columns: res[0].columns, rows: res[0].values } : { columns: [], rows: [] }; };
+      state.ds = fromSnnbench({ runs: all("runs"), conditions: all("conditions"), meta: info.some(x => x.t === "meta") ? all("meta") : [] }, name);
+      finishLoad();
+      return;
+    }
     const score = x => ROLES.filter(r => x.cols.some(c => r.re.some(re => re.test(c)))).length * 1000 + x.c;
     info.sort((a, b) => score(b) - score(a));
     const pick = clear($("#table-pick")); pick.hidden = false;
@@ -1505,7 +1994,8 @@ function applyMapping() {
   finishLoad();
 }
 function finishLoad() {
-  state.task = state.hw = null; state.hidden.clear(); state.focusN = null;
+  state.task = state.ds.defaultTask || null; state.hw = state.ds.defaultHw || null; state.hidden.clear(); state.focusN = null;
+  if (!state.ds.hasModes) state.mode = "all";
   closeLoader(); renderAll();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -1513,7 +2003,13 @@ function finishLoad() {
 /* ---------- boot ---------- */
 let pilot = null;
 try { pilot = JSON.parse($("#pilot-data").textContent); } catch (e) { pilot = null; }
-if (pilot) { state.pilot = state.ds = fromPilot(pilot); renderAll(); }
+if (pilot && pilot.kind === "snnbench-db") {
+  // a page generated for one campaign: its database is the starting dataset
+  state.ds = fromSnnbench(pilot.tables, pilot.title);
+  if (pilot.lede) state.ds.lede = pilot.lede;
+  state.task = state.ds.defaultTask; state.hw = state.ds.defaultHw; state.mode = "all";
+  renderAll();
+} else if (pilot) { state.pilot = state.ds = fromPilot(pilot); renderAll(); }
 else { $("#source-text").textContent = "No embedded data. Load your results to begin."; openLoader(); }
 })();
 </script>

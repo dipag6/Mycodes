@@ -7,7 +7,8 @@ first.
 ```
 dashboard/index.html     the dashboard (open it in any browser; no install)
 dashboard/template.html  the same page before the pilot data is embedded
-pilot/                   the benchmark harness that produced the pilot data
+pilot/                   the benchmark harness that produced the pilot data,
+                         and export_snnbench.py for snnbench campaign pages
 data/                    the pilot's per-run table, fidelity table and dataset
 ```
 
@@ -27,6 +28,39 @@ charted only after you say whether it was measured or estimated.
 Reading a `.db` file loads the SQLite reader from jsDelivr, so that one path
 needs an internet connection; CSV and JSON work offline. Fonts come from
 Google Fonts and fall back to system fonts offline.
+
+## Read an snnbench campaign
+
+A `benchmarks.db` written by `snnbench` (tables `runs`, `conditions` and
+`meta`) is recognised when loaded and needs no column mapping. To give
+someone a page that opens straight on a campaign, embed it:
+
+```
+python -m pilot.export_snnbench --db path/to/results/benchmarks.db --out campaign.html
+```
+
+Both paths read the stored rows with the same code and recompute nothing
+upstream. Every configuration keeps its own line (NEST thread counts and the
+NumPy controls are dashed variants), sessions become a filter, and two panels
+appear that the pilot does not need:
+
+- **Before reading the rankings** runs checks on the data itself. These are:
+  - spike counts outside the campaign's 35% tolerance at any size;
+  - one-sided count offsets;
+  - variants of one simulator emitting different spikes on the same configuration;
+  - CPU readings above what the thread count allows;
+  - flat or curving scaling;
+  - memory that reflects the measuring process, or a build phase that peaks above the simulation;
+  - an energy column that is CPU time times a constant;
+  - very short simulated runs;
+  - training runs at chance accuracy, and times labelled per epoch that cover a whole run.
+
+  Each check reports the numbers it found.
+- **Training** plots test accuracy against total training time, with the
+  chance line, and flags each row.
+
+The decision helper is switched off when runs simulate under 0.1 s, because
+fixed per-call costs make such timings impossible to extrapolate.
 
 ## What the pilot measures
 
