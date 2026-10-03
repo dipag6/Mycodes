@@ -30,6 +30,28 @@ def peak_rss_mb():
     return r / 1024 if sys.platform != "darwin" else r / 2**20
 
 
+def host_fingerprint():
+    """CPU model/stepping, core count and RAM. Cloud sessions can move to a
+    different machine between runs, so every record carries this."""
+    cpu = {}
+    try:
+        with open("/proc/cpuinfo") as f:
+            for line in f:
+                k, _, v = line.partition(":")
+                k = k.strip()
+                if k in ("model name", "model", "stepping", "cpu family") \
+                        and k not in cpu:
+                    cpu[k] = v.strip()
+        with open("/proc/meminfo") as f:
+            mem_gb = round(int(f.readline().split()[1]) / 2**20)
+    except OSError:
+        mem_gb = None
+    return (f"{cpu.get('model name', platform.processor())} | family "
+            f"{cpu.get('cpu family', '?')} model {cpu.get('model', '?')} "
+            f"stepping {cpu.get('stepping', '?')} | {os.cpu_count()} cpu | "
+            f"{mem_gb} GB")
+
+
 def timed(fn, *args):
     w0, c0 = time.perf_counter(), time.process_time()
     out = fn(*args)
@@ -50,7 +72,10 @@ def main():
 
     rec = {"backend": a.backend, "n_neurons": a.n, "mode": a.mode,
            "rep": a.rep, "is_warmup": a.rep < 0, "status": "ok",
-           "python": platform.python_version()}
+           "python": platform.python_version(),
+           "host_fingerprint": host_fingerprint(),
+           "kernel": platform.release(),
+           "started_at": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     rec["rss_start_mb"] = rss_mb()
     try:
         mod = load(a.backend)

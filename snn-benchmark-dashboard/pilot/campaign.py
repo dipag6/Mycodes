@@ -21,6 +21,7 @@ import numpy as np
 
 from . import fidelity, spec
 from .backends import ALL
+from .run_one import host_fingerprint
 
 THREAD_ENV = {"OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1",
               "OPENBLAS_NUM_THREADS": "1", "NUMEXPR_NUM_THREADS": "1",
@@ -40,6 +41,7 @@ def machine_info():
             info["ram_gb"] = round(int(f.readline().split()[1]) / 2**20, 1)
     except OSError:
         pass
+    info["fingerprint"] = host_fingerprint()
     info["gpu"] = "none"
     info["power_telemetry"] = ("none (no RAPL powercap interface and no GPU "
                                "in this container)")
@@ -93,6 +95,10 @@ def main():
         # resuming an interrupted campaign: keep the original start time
         with open(meta_path) as f:
             meta = json.load(f)
+        if meta["machine"].get("fingerprint") != host_fingerprint():
+            sys.exit("refusing to resume: this campaign started on\n  "
+                     f"{meta['machine'].get('fingerprint')}\nbut this machine is\n"
+                     f"  {host_fingerprint()}\nStart a new --out directory.")
         meta.setdefault("resumed", []).append(now)
     else:
         meta = {"spec": spec.describe(), "machine": machine_info(),
@@ -149,9 +155,16 @@ def main():
             f.write(json.dumps(fr) + "\n")
         fid_done.add((b, n, mode))
 
+    fingerprint = meta["machine"]["fingerprint"]
+
     def log(rec):
         with open(runs_path, "a") as f:
             f.write(json.dumps(rec) + "\n")
+        if rec.get("host_fingerprint") not in (None, fingerprint):
+            print("host changed during the campaign; stopping so that two "
+                  f"machines are never mixed:\n  {rec['host_fingerprint']}",
+                  flush=True)
+            sys.exit(3)
         print(f"[{time.strftime('%H:%M:%S')}] {rec['backend']:14s} "
               f"n={rec['n_neurons']:<6d} {rec['mode']:8s} rep={rec['rep']:<2d} "
               f"{rec['status']:7s} sim={rec.get('simulate_s', float('nan')):.3f}s "
