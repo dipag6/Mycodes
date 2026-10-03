@@ -1,0 +1,12 @@
+{"n": 4000, "relay": "direct", "build_s": 0.27288395300001866, "prepare_s": 0.005589754000084213, "simulate_s": 2.0823603149997325, "n_spikes": 66576, "peak_rss_mb": 304.7578125}
+{"n": 4000, "relay": "parrot", "build_s": 0.21942580099994302, "prepare_s": 0.020342459999938, "simulate_s": 2.337787579000178, "n_spikes": 66576, "peak_rss_mb": 323.41015625}
+{"n": 4000, "relay": "direct", "build_s": 0.3152070830001321, "prepare_s": 0.005373176999910356, "simulate_s": 2.1144475740002235, "n_spikes": 66576, "peak_rss_mb": 304.6875}
+{"n": 4000, "relay": "parrot", "build_s": 0.29229185099984534, "prepare_s": 0.024968346000150632, "simulate_s": 2.356750660000216, "n_spikes": 66576, "peak_rss_mb": 323.61328125}
+{"n": 4000, "relay": "direct", "build_s": 0.3002162269999644, "prepare_s": 0.007440669000061462, "simulate_s": 2.283987659000104, "n_spikes": 66576, "peak_rss_mb": 304.6484375}
+{"n": 4000, "relay": "parrot", "build_s": 0.25564664500006984, "prepare_s": 0.024001200999919092, "simulate_s": 2.6091206330002024, "n_spikes": 66576, "peak_rss_mb": 323.6640625}
+{"n": 16000, "relay": "direct", "build_s": 1.1563893739999003, "prepare_s": 0.021569672000168794, "simulate_s": 7.895790286999727, "n_spikes": 265954, "peak_rss_mb": 795.11328125}
+{"n": 16000, "relay": "parrot", "build_s": 1.0080055549997269, "prepare_s": 0.09913185400000657, "simulate_s": 9.343305757000053, "n_spikes": 265954, "peak_rss_mb": 830.01953125}
+{"n": 16000, "relay": "direct", "build_s": 1.0993999199999962, "prepare_s": 0.020083519999843702, "simulate_s": 8.608823372000188, "n_spikes": 265954, "peak_rss_mb": 795.45703125}
+{"n": 16000, "relay": "parrot", "build_s": 0.9263986070000101, "prepare_s": 0.09503765500039663, "simulate_s": 9.152707796999948, "n_spikes": 265954, "peak_rss_mb": 830.0}
+{"n": 16000, "relay": "direct", "build_s": 1.0152281709997624, "prepare_s": 0.018071236000196222, "simulate_s": 8.852160021000145, "n_spikes": 265954, "peak_rss_mb": 795.32421875}
+{"n": 16000, "relay": "parrot", "build_s": 0.991932997999811, "prepare_s": 0.09965441099984673, "simulate_s": 9.3070330810001, "n_spikes": 265954, "peak_rss_mb": 830.02734375}

@@ -61,6 +61,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
@@ -559,6 +560,14 @@ function fmtMB(mb) { if (!finite(mb)) return "–"; return mb >= 1024 ? (mb / 10
 function fmtN(n) { if (!finite(n)) return "–"; return n >= 1000 ? (n % 1000 === 0 ? n / 1000 + "k" : (n / 1000).toPrecision(3) + "k") : String(n); }
 function fmtInt(n) { return finite(n) ? Math.round(n).toLocaleString("en-US") : "–"; }
 function fmtPct(x, d = 1) { return finite(x) ? (x * 100).toFixed(d) + "%" : "–"; }
+function fmtTickTime(v) {
+  if (v === 0) return "0";
+  if (v < 1e-3) return +(v * 1e6).toPrecision(3) + " µs";
+  if (v < 1) return +(v * 1e3).toPrecision(3) + " ms";
+  return (+v.toPrecision(6)).toLocaleString("en-US") + " s";
+}
+function fmtTickMB(v) { return (+v.toPrecision(6)).toLocaleString("en-US") + " MB"; }
+function fmtTickJ(v) { return v === 0 ? "0" : (+v.toPrecision(6)).toLocaleString("en-US") + " J"; }
 function fmtJ(j) { if (!finite(j)) return "–"; return j >= 1000 ? (j / 1000).toPrecision(3) + " kJ" : j >= 10 ? j.toPrecision(3) + " J" : j.toPrecision(2) + " J"; }
 
 /* ---------- dataset normalisation ---------- */
@@ -625,6 +634,8 @@ function visibleBackends() {
 }
 const isShown = id => !state.hidden.has(id);
 const info = id => state.ds.reg.all().find(x => x.id === id) || { id, label: id, color: "var(--s0)", paradigm: "Other" };
+const SHORT = { brian2_cython: "B2 Cython", brian2_cpp: "B2 C++", numpy_ref: "NumPy", spikingjelly: "SJelly" };
+const shortName = e => SHORT[e.id] || (e.label.length > 11 ? e.label.slice(0, 10) + "…" : e.label);
 
 function pickTime(r, phase, clock) {
   if (clock === "cpu") {
@@ -729,7 +740,8 @@ function lineChart(host, opts) {
   if (!series.length) { host.appendChild(h("div", { class: "empty", text: opts.empty || "No data for this selection." })); return; }
   const W = Math.max(320, host.clientWidth || 800), H = opts.height || 380;
   const narrow = W < 560;
-  const m = { l: narrow ? 52 : 62, r: narrow ? 92 : 168, t: 14, b: 44 };
+  const m = { l: narrow ? 64 : 78, r: narrow ? 104 : 176, t: 14, b: 44 };
+  const tickFmt = opts.tickFmt || opts.yFmt;
   const all = series.flatMap(s => s.points);
   const xs = all.map(p => p.n), ys = all.flatMap(p => [p.min, p.max, p.med]).filter(v => finite(v) && v > 0);
   let y0 = Math.min(...ys), y1 = Math.max(...ys);
@@ -742,7 +754,7 @@ function lineChart(host, opts) {
   for (const t of logTicks(y0, y1)) {
     const y = ysL(t.v);
     svg("line", { x1: m.l, x2: W - m.r, y1: y, y2: y, class: "grid-line", opacity: t.major ? 1 : 0.55 }, root);
-    if (t.major || (narrow ? false : logTicks(y0, y1).length <= 9)) svg("text", { x: m.l - 8, y: y + 4, "text-anchor": "end", class: "tick-label" }, root).textContent = opts.yFmt(t.v);
+    if (t.major || (narrow ? false : logTicks(y0, y1).length <= 9)) svg("text", { x: m.l - 8, y: y + 4, "text-anchor": "end", class: "tick-label" }, root).textContent = tickFmt(t.v);
   }
   const ns = [...new Set(xs)].sort((a, b) => a - b);
   for (const n of ns) {
@@ -752,12 +764,12 @@ function lineChart(host, opts) {
   }
   svg("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, class: "base-line" }, root);
   svg("text", { x: (m.l + W - m.r) / 2, y: H - 6, "text-anchor": "middle", class: "axis-title" }, root).textContent = opts.xTitle;
-  const yt = svg("text", { x: 14, y: (m.t + H - m.b) / 2, "text-anchor": "middle", class: "axis-title", transform: `rotate(-90 14 ${(m.t + H - m.b) / 2})` }, root);
+  const yt = svg("text", { x: 12, y: (m.t + H - m.b) / 2, "text-anchor": "middle", class: "axis-title", transform: `rotate(-90 12 ${(m.t + H - m.b) / 2})` }, root);
   yt.textContent = opts.yTitle;
   if (opts.refY && opts.refY >= y0 && opts.refY <= y1) {
     const y = ysL(opts.refY);
     svg("line", { x1: m.l, x2: W - m.r, y1: y, y2: y, class: "ref-line" }, root);
-    svg("text", { x: m.l + 6, y: y - 5, class: "ref-label" }, root).textContent = opts.refLabel;
+    svg("text", { x: m.l + 6, y: y - 5, class: "ref-label" }, root).textContent = narrow ? (opts.refShort || opts.refLabel) : opts.refLabel;
   }
   // bands, lines, markers
   for (const s of series) {
@@ -781,9 +793,12 @@ function lineChart(host, opts) {
   const lx = W - m.r + 14;
   for (const l of labels) {
     if (Math.abs(l.ly - l.y) > 2 || l.x < W - m.r - 2) svg("polyline", { points: `${l.x + 6},${l.y} ${lx - 4},${l.ly}`, class: "leader", fill: "none" }, root);
-    const t = svg("text", { x: lx, y: l.ly + 4, class: "end-label" }, root);
+    const t = svg("text", { x: lx, y: l.ly + 4, class: "end-label", style: narrow ? "font-size:11px" : null }, root);
     t.appendChild(document.createTextNode(narrow ? l.s.short || l.s.label : l.s.label));
-    if (l.s.tag && !narrow) { const ts = svg("tspan", { class: "slope", dx: 6 }, t); ts.textContent = l.s.tag; }
+    if (l.s.exp && !narrow) {
+      const base = svg("tspan", { class: "slope", dx: 6 }, t); base.textContent = "N";
+      const sup = svg("tspan", { class: "slope", dy: -5, style: "font-size:9px" }, t); sup.textContent = l.s.exp;
+    }
   }
   // crosshair snapping to the measured sizes
   const cross = svg("line", { y1: m.t, y2: H - m.b, class: "cross", visibility: "hidden" }, root);
@@ -827,7 +842,7 @@ function hbarChart(host, opts) {
   const root = svg("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opts.aria }, host);
   for (const t of tk.ticks) {
     svg("line", { x1: x(t), x2: x(t), y1: m.t, y2: H - m.b, class: "grid-line" }, root);
-    svg("text", { x: x(t), y: H - m.b + 16, "text-anchor": "middle", class: "tick-label" }, root).textContent = opts.fmt(t);
+    svg("text", { x: x(t), y: H - m.b + 16, "text-anchor": "middle", class: "tick-label" }, root).textContent = (opts.tickFmt || opts.fmt)(t);
   }
   svg("line", { x1: m.l, x2: m.l, y1: m.t, y2: H - m.b, class: "base-line" }, root);
   if (opts.xTitle) svg("text", { x: (m.l + W - m.r) / 2, y: H - 2, "text-anchor": "middle", class: "axis-title" }, root).textContent = opts.xTitle;
@@ -989,7 +1004,10 @@ function renderKPIs() {
   const sim = aggregate(runs, r => r.t.simulate, false);
   const nMax = Math.max(...sim.map(a => a.n));
   const atMax = sim.filter(a => a.n === nMax).sort((a, b) => a.med - b.med);
-  if (atMax.length) tile(`Fastest simulation at N = ${fmtInt(nMax)}`, info(atMax[0].b).label, null, `${fmtTime(atMax[0].med)} per ${ds.bioSeconds === 1 ? "simulated second" : "run"}${atMax.length > 1 ? ` · slowest ${info(atMax[atMax.length - 1].b).label}, ${fmtTime(atMax[atMax.length - 1].med)}` : ""}`);
+  const simsAt = atMax.filter(a => a.b !== "numpy_ref"), refAt = atMax.find(a => a.b === "numpy_ref");
+  const per = ds.bioSeconds === 1 ? "per simulated second" : "per run";
+  const tie = simsAt.length > 1 && simsAt[1].med / simsAt[0].med < 1.05 ? `, level with ${info(simsAt[1].b).label} (within 5%)` : "";
+  if (simsAt.length) tile(`Fastest simulator at N = ${fmtInt(nMax)}`, info(simsAt[0].b).label, null, `${fmtTime(simsAt[0].med)} ${per}${tie}${refAt ? ` · plain NumPy baseline ${fmtTime(refAt.med)}` : simsAt.length > 1 ? ` · slowest ${info(simsAt[simsAt.length - 1].b).label}, ${fmtTime(simsAt[simsAt.length - 1].med)}` : ""}`);
   // 3 biggest one-off cost (first run)
   const first = ds.runs.filter(r => r.ok && r.warm && isShown(r.b) && (!ds.hasModes || r.mode === state.mode));
   const oneoff = first.map(r => ({ r, v: [r.t.import, r.t.build, r.t.prepare].filter(finite).reduce((a, b) => a + b, 0) })).sort((a, b) => b.v - a.v);
@@ -1017,7 +1035,7 @@ function renderScaling() {
     const pts = aggregate(runs.filter(r => r.b === id), val, false);
     const slope = fitSlope(pts);
     const e = info(id);
-    return { id, label: e.label, short: e.label.replace("Brian2 · ", "B2 "), color: e.color, points: pts, tag: finite(slope) ? `N^${slope.toFixed(2)}` : "" };
+    return { id, label: e.label, short: shortName(e), color: e.color, points: pts, exp: finite(slope) ? slope.toFixed(2) : "", tag: finite(slope) ? slope.toFixed(2) : "" };
   }).filter(s => s.points.length);
   const phaseName = { simulate: "simulate", oneoff: "build + prepare", total: "total" }[state.phase];
   const bio = state.ds.bioSeconds;
@@ -1026,12 +1044,12 @@ function renderScaling() {
   lineChart($("#scaling-chart"), {
     series, height: 400, xTitle: "Network size (neurons, log scale)",
     yTitle: state.phase === "simulate" && bio === 1 ? "Seconds per simulated second (log)" : "Seconds (log scale)",
-    yFmt: v => fmtTime(v), aria: "Runtime against network size for each simulator",
-    refY: state.phase === "simulate" && bio === 1 ? 1 : null, refLabel: "Real time: 1 s of compute per simulated second",
+    yFmt: v => fmtTime(v), tickFmt: fmtTickTime, aria: "Runtime against network size for each simulator",
+    refY: state.phase === "simulate" && bio === 1 ? 1 : null, refLabel: "Real time: 1 s of compute per simulated second", refShort: "Real time",
     tipNote: "Median, with fastest–slowest run in brackets",
   });
   table($("#scaling-table"), ["Simulator", "Neurons", "Runs", "Median", "Fastest", "Slowest", "Exponent"],
-    series.flatMap(s => s.points.map(p => [s.label, fmtInt(p.n), String(p.count), fmtTime(p.med), fmtTime(p.min), fmtTime(p.max), s.tag.replace("N^", "")])), [1, 2, 3, 4, 5, 6]);
+    series.flatMap(s => s.points.map(p => [s.label, fmtInt(p.n), String(p.count), fmtTime(p.med), fmtTime(p.min), fmtTime(p.max), s.tag])), [1, 2, 3, 4, 5, 6]);
 }
 
 const PHASES = [
@@ -1052,11 +1070,11 @@ function renderCost() {
   const rows = ids.map(id => {
     const rr = runs.filter(r => r.b === id), e = info(id);
     const segs = PHASES.map(p => ({ label: p.label, color: p.color, v: median(rr.map(r => r.t[p.k]).filter(finite)) }));
-    return { id, label: e.label, short: e.label.replace("Brian2 · ", "B2 "), color: e.color, segs };
+    return { id, label: e.label, short: shortName(e), color: e.color, segs };
   }).sort((a, b) => a.segs.reduce((s, x) => s + (finite(x.v) ? x.v : 0), 0) - b.segs.reduce((s, x) => s + (finite(x.v) ? x.v : 0), 0));
   const leg = clear($("#cost-legend"));
   for (const p of PHASES) leg.appendChild(h("span", { class: "key" }, h("span", { class: "rect-key", style: `background:${p.color}` }), p.label));
-  hbarChart($("#cost-chart"), { rows, fmt: fmtTime, aria: "Time per phase for each simulator", xTitle: "Seconds", empty: first ? "No warm-up runs recorded at this size." : "No runs at this size." });
+  hbarChart($("#cost-chart"), { rows, fmt: fmtTime, tickFmt: fmtTickTime, aria: "Time per phase for each simulator", xTitle: "Seconds", empty: first ? "No warm-up runs recorded at this size." : "No runs at this size." });
   table($("#cost-table"), ["Simulator", ...PHASES.map(p => p.label), "Total"], rows.map(r => [r.label, ...r.segs.map(s => fmtTime(s.v)), fmtTime(r.segs.reduce((a, s) => a + (finite(s.v) ? s.v : 0), 0))]), [1, 2, 3, 4, 5, 6]);
   // break-even: compiled standalone against the runtime variant of the same simulator
   const be = clear($("#breakeven"));
@@ -1080,9 +1098,9 @@ function renderCost() {
 function renderMemory() {
   const runs = activeRuns().filter(r => isShown(r.b));
   const ids = visibleBackends().filter(e => isShown(e.id)).map(e => e.id);
-  const series = ids.map(id => { const e = info(id); return { id, label: e.label, short: e.label.replace("Brian2 · ", "B2 "), color: e.color, points: aggregate(runs.filter(r => r.b === id), r => r.mem.peak, false), band: false }; }).filter(s => s.points.length);
+  const series = ids.map(id => { const e = info(id); return { id, label: e.label, short: shortName(e), color: e.color, points: aggregate(runs.filter(r => r.b === id), r => r.mem.peak, false), band: false }; }).filter(s => s.points.length);
   seriesLegend($("#memory-legend"), series.map(s => s.id), "line");
-  lineChart($("#memory-chart"), { series, height: 320, xTitle: "Network size (neurons, log scale)", yTitle: "Peak resident memory (log)", yFmt: fmtMB, aria: "Peak memory against network size", empty: "This dataset has no memory column." });
+  lineChart($("#memory-chart"), { series, height: 320, xTitle: "Network size (neurons, log scale)", yTitle: "Peak resident memory (log)", yFmt: fmtMB, tickFmt: fmtTickMB, aria: "Peak memory against network size", empty: "This dataset has no memory column." });
   const base = id => median(runs.filter(r => r.b === id).map(r => r.mem.base).filter(finite));
   table($("#memory-table"), ["Simulator", "Neurons", "Peak (median)", "After import"], series.flatMap(s => s.points.map(p => [s.label, fmtInt(p.n), fmtMB(p.med), fmtMB(base(s.id))])), [1, 2, 3]);
 }
@@ -1094,17 +1112,17 @@ function renderEnergy() {
   const ids = [...new Set(runs.map(r => r.b))];
   let rows, cap;
   if (measured) {
-    rows = ids.map(id => { const e = info(id); return { id, label: e.label, short: e.label.replace("Brian2 · ", "B2 "), color: e.color, v: median(runs.filter(r => r.b === id).map(r => r.energy).filter(finite)) }; });
+    rows = ids.map(id => { const e = info(id); return { id, label: e.label, short: shortName(e), color: e.color, v: median(runs.filter(r => r.b === id).map(r => r.energy).filter(finite)) }; });
     $("#energy-sub").textContent = `Energy column from your file, labelled “${ds.energyLabel || "unlabelled"}” · N = ${fmtInt(n)}`;
     cap = `Plotted as supplied. The label above is the method you declared when loading the file; values with different methods are not comparable with each other.`;
   } else {
-    rows = ids.map(id => { const e = info(id); const cs = median(runs.filter(r => r.b === id).map(r => r.cpu.simulate).filter(finite)); return { id, label: e.label, short: e.label.replace("Brian2 · ", "B2 "), color: e.color, v: cs * w, cs }; });
+    rows = ids.map(id => { const e = info(id); const cs = median(runs.filter(r => r.b === id).map(r => r.cpu.simulate).filter(finite)); return { id, label: e.label, short: shortName(e), color: e.color, v: cs * w, cs }; });
     $("#energy-sub").textContent = `Simulate phase at N = ${fmtInt(n)}, ${ds.bioSeconds === 1 ? "per simulated second" : "per run"}`;
     cap = `Estimate, not a measurement: CPU core-seconds × ${w} W per busy core, the core term of the Green Algorithms method. This container exposes no power counters (no RAPL, no GPU), so no energy was measured. Idle power, memory and cooling are excluded. Change the wattage to match your CPU's TDP divided by its core count.`;
   }
   rows = rows.filter(r => finite(r.v)).sort((a, b) => a.v - b.v);
   $("#energy-cap").textContent = cap;
-  hbarChart($("#energy-chart"), { rows: rows.map(r => ({ ...r, segs: [{ v: r.v, color: r.color, label: measured ? "Energy" : "Estimated energy", note: measured ? null : `${r.cs.toPrecision(3)} core-seconds × ${w} W` }] })), fmt: v => fmtJ(v), aria: "Estimated energy per simulator", xTitle: measured ? "Joules" : "Joules (estimated)", endLabel: (r, v) => measured ? fmtJ(v) : `≈ ${fmtJ(v)}`, empty: "No CPU-time column in this dataset." });
+  hbarChart($("#energy-chart"), { rows: rows.map(r => ({ ...r, segs: [{ v: r.v, color: r.color, label: measured ? "Energy" : "Estimated energy", note: measured ? null : `${r.cs.toPrecision(3)} core-seconds × ${w} W` }] })), fmt: v => fmtJ(v), tickFmt: fmtTickJ, aria: "Estimated energy per simulator", xTitle: measured ? "Joules" : "Joules (estimated)", endLabel: (r, v) => measured ? fmtJ(v) : `≈ ${fmtJ(v)}`, empty: "No CPU-time column in this dataset." });
   table($("#energy-table"), measured ? ["Simulator", "Energy"] : ["Simulator", "CPU core-seconds", "Estimated energy"], rows.map(r => measured ? [r.label, fmtJ(r.v)] : [r.label, r.cs.toPrecision(3), fmtJ(r.v)]), measured ? [1] : [1, 2]);
 }
 

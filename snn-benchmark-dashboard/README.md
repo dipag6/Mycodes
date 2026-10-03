@@ -79,8 +79,25 @@ every run, and stops if the machine changes underneath it (a cloud session
 moved hosts during the first attempt; those partial runs are kept separately
 and shown in the dashboard's host comparison).
 
-## Provenance
+## Provenance and known limits
 
 The pilot data in `data/` was produced by this harness in a cloud container
 (Intel Xeon @ 2.10 GHz, 4 vCPU, 16 GB). It demonstrates the method; it is not
 a substitute for results from the thesis's own benchmark campaign.
+
+- CPU time counts child processes as well as the Python process. That matters
+  only for Brian2's C++ standalone mode, which compiles with `make` (in
+  parallel: about 8.7 s of CPU in 2.8 s of wall time) and runs the model as a
+  separate binary. Its runs were repeated after the main campaign once the
+  accounting was fixed, so they are not interleaved with the others; their
+  first pass is kept in `data/archive_brian2_cpp_first_pass.jsonl`. The two
+  passes' medians differ by -10% to +15% with overlapping ranges, which is the
+  session-to-session noise on this machine. The compiler's CPU time in the very
+  first Brian2 Cython run (cold cache) was recorded before the fix and is
+  undercounted.
+- Peak memory is the Python process only. For Brian2 C++ it excludes the model
+  binary.
+- NEST's input arrives from spike generators wired directly to every neuron.
+  Relaying it through parrot neurons was 8 to 11% slower
+  (`data/nest_idiom_probe.jsonl`, `pilot/nest_idiom_probe.py`), so the direct
+  wiring was kept.

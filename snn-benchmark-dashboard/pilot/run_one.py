@@ -52,10 +52,18 @@ def host_fingerprint():
             f"{mem_gb} GB")
 
 
+def cpu_seconds():
+    """CPU time of this process plus every child it has waited for. Brian2's
+    standalone mode compiles with g++ and runs the model as a separate
+    binary, so process_time() alone would miss most of its work."""
+    ch = resource.getrusage(resource.RUSAGE_CHILDREN)
+    return time.process_time() + ch.ru_utime + ch.ru_stime
+
+
 def timed(fn, *args):
-    w0, c0 = time.perf_counter(), time.process_time()
+    w0, c0 = time.perf_counter(), cpu_seconds()
     out = fn(*args)
-    return out, time.perf_counter() - w0, time.process_time() - c0
+    return out, time.perf_counter() - w0, cpu_seconds() - c0
 
 
 def main():
@@ -104,7 +112,14 @@ def main():
         rec["status"] = "error"
         rec["error"] = f"{type(e).__name__}: {e}"
         rec["traceback"] = traceback.format_exc()[-2000:]
-    rec["peak_rss_mb"] = peak_rss_mb()
+    # Peak memory is this process only. The children's figure is kept for
+    # reference but is not a measurement of the model binary: a forked child
+    # mirrors this process's pages until it execs, so its ru_maxrss is at
+    # least this process's size whatever the binary itself uses.
+    ch = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
+    rec["peak_rss_children_mb"] = ch / 1024 if sys.platform != "darwin" else ch / 2**20
+    rec["peak_rss_self_mb"] = peak_rss_mb()
+    rec["peak_rss_mb"] = rec["peak_rss_self_mb"]
     rec["total_s"] = sum(rec.get(k, 0.0) or 0.0 for k in
                          ("build_s", "prepare_s", "simulate_s", "collect_s"))
     rec["cpu_s"] = sum(rec.get(k, 0.0) or 0.0 for k in

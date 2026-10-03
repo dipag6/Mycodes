@@ -28,7 +28,9 @@ def versions():
 def notes(mode):
     base = ("Whole network generated as C++ and compiled with Brian2's default "
             "flags (-O3 -ffast-math -march=native); prepare = code generation + "
-            "compilation, simulate = running the binary. ")
+            "compilation (make runs in parallel, so compile CPU time exceeds its "
+            "wall time), simulate = running the binary on one thread. Peak memory "
+            "covers the Python process only, not the binary. ")
     if mode == "matched":
         return base + "Threshold v >= theta; pathway before the threshold test."
     return base + "Threshold v > theta; default schedule."
