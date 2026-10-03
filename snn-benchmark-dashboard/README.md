@@ -1,0 +1,86 @@
+# SNN Benchmark Dashboard
+
+An interactive dashboard for comparing spiking neural network simulators, and a
+small pilot benchmark that shows why a speed comparison needs a fidelity check
+first.
+
+```
+dashboard/index.html     the dashboard (open it in any browser; no install)
+dashboard/template.html  the same page before the pilot data is embedded
+pilot/                   the benchmark harness that produced the pilot data
+data/                    the pilot's per-run table, fidelity table and dataset
+```
+
+## Open the dashboard
+
+Double-click `dashboard/index.html`. It opens with the pilot's measured data.
+
+To look at another benchmark's results, choose **Load your results** and pick a
+CSV, JSON or SQLite file (for example `results/benchmarks.db` or `runs.csv`
+from an `snnbench` campaign). The file is read inside the browser and never
+uploaded. You map your columns to roles; only a simulator name, a network size
+and one timing column are required. Optional roles cover build and compile
+time, CPU time, memory, energy, task, hardware, condition and parity
+(share of reference spikes matched, spike-count error). An energy column is
+charted only after you say whether it was measured or estimated.
+
+Reading a `.db` file loads the SQLite reader from jsDelivr, so that one path
+needs an internet connection; CSV and JSON work offline. Fonts come from
+Google Fonts and fall back to system fonts offline.
+
+## What the pilot measures
+
+One feedforward layer of leaky integrate-and-fire neurons, driven by 1,000
+Poisson inputs at 20 Hz, 100 inputs per neuron, membrane time constant 20 ms,
+step 0.1 ms, 1 s simulated, from 500 to 32,000 neurons. Every simulator gets
+byte-identical input spikes and connectivity (`pilot/spec.py`).
+
+| Configuration | Library |
+| --- | --- |
+| `numpy_ref` | hand-written NumPy reference that defines the canonical update |
+| `nest` | NEST 3.10 |
+| `brian2_cython` | Brian2 2.9 runtime mode (Cython) |
+| `brian2_cpp` | Brian2 2.9 C++ standalone mode |
+| `nengo` | Nengo 4.1 reference simulator |
+| `snntorch` | snnTorch 1.0 on PyTorch 2.14 (CPU) |
+| `spikingjelly` | SpikingJelly 0.0.0.0.14 on PyTorch 2.14 (CPU) |
+
+Each configuration runs in two modes:
+
+- **matched**: configured to reproduce the canonical update (one-step synaptic
+  delay, input before the threshold test, `>=` threshold, zero initial voltage,
+  exact exponential decay);
+- **native**: the most direct implementation using the library's defaults.
+
+Every run is a fresh Python process on one thread. Build, prepare
+(code generation, compilation, JIT) and simulate are timed separately, with
+peak memory and CPU time. Each size gets one warm-up and five measured runs in
+matched mode, interleaved across simulators in a seeded random order, plus one
+native run for the fidelity table. Output spikes are compared with the
+reference (`pilot/fidelity.py`): spike-count error, per-neuron rate
+correlation, exact-step match and the coincidence factor of Kistler et al.
+(1997) at ±1 ms.
+
+No energy was measured: the container has no RAPL or GPU power counters. The
+dashboard's energy panel is an estimate (CPU core-seconds × an adjustable
+watts-per-core figure) and says so.
+
+## Rerun it
+
+```
+python -m venv .venv && . .venv/bin/activate
+pip install -r pilot/requirements.txt
+python -m pilot.campaign --out runs/my_machine --sizes 500,1000,2000,4000,8000,16000,32000 --reps 5
+python -m pilot.export --campaign runs/my_machine
+```
+
+The campaign resumes after an interruption, records a host fingerprint with
+every run, and stops if the machine changes underneath it (a cloud session
+moved hosts during the first attempt; those partial runs are kept separately
+and shown in the dashboard's host comparison).
+
+## Provenance
+
+The pilot data in `data/` was produced by this harness in a cloud container
+(Intel Xeon @ 2.10 GHz, 4 vCPU, 16 GB). It demonstrates the method; it is not
+a substitute for results from the thesis's own benchmark campaign.

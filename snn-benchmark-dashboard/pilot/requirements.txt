@@ -1,0 +1,15 @@
+# Exact stack the pilot was measured with (Python 3.11.15, Linux x86_64).
+# numpy is held below 2.4: Brian2 2.9.0 calls ndarray.ptp, which NumPy 2.4 removed,
+# and fails at import time otherwise.
+numpy==2.3.5
+scipy==1.17.1
+Cython==3.3.0
+sympy==1.14.0
+pyparsing==3.3.3
+Jinja2==3.1.6
+Brian2==2.9.0
+nest-simulator==3.10.0
+nengo==4.1.0
+torch==2.14.1
+snntorch==1.0.0
+spikingjelly==0.0.0.0.14

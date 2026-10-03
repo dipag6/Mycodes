@@ -1,0 +1,71 @@
+backend,n_neurons,mode,n_spikes_ref,n_spikes,count_rel_err,rate_corr,exact_match,gamma_1ms,first_divergence_ms,cause
+numpy_ref,500,matched,8347,8347,0.0,1.0,1.0,1.0,,
+nest,500,matched,8347,8347,0.0,1.0,1.0,1.0,,
+brian2_cython,500,matched,8347,8347,0.0,1.0,1.0,1.0,,
+brian2_cpp,500,matched,8347,8347,0.0,1.0,1.0,1.0,,
+nengo,500,matched,8347,8347,0.0,1.0,1.0,1.0,,
+snntorch,500,matched,8347,8347,0.0,1.0,0.9995207859111058,0.9996717365138418,429.0,float32 state: a handful of near-threshold crossings round the other way.
+spikingjelly,500,matched,8347,8347,0.0,1.0,0.9995207859111058,0.9996717365138418,429.0,float32 state: a handful of near-threshold crossings round the other way.
+numpy_ref,500,native,8347,8347,0.0,1.0,1.0,1.0,,
+nest,500,native,8347,8347,0.0,1.0,1.0,1.0,,"NEST's defaults already implement the spec (exact integration, delay >= 1 step, >= threshold test)."
+brian2_cython,500,native,8347,8147,-0.023960704444710674,0.9713488369939627,0.5373187971726369,0.7727902973865112,25.0,"Default schedule adds input after the threshold test: input decays one step before it can cause a spike, and input arriving in the step a neuron fires is overwritten by the reset."
+brian2_cpp,500,native,8347,8147,-0.023960704444710674,0.9713488369939627,0.5373187971726369,0.7727902973865112,25.0,Same default schedule as the Cython runtime: input after the threshold test.
+nengo,500,native,8347,8529,0.021804241044686715,0.9823344195809617,0.0029950880555888342,0.9004527705865881,0.2,"Default initial membrane voltage is drawn from Uniform(0, 1) of threshold instead of starting at rest."
+snntorch,500,native,8347,8347,0.0,1.0,0.0,0.9996717365138418,18.6,"No synaptic delay: each input acts one step (0.1 ms) earlier, so spike counts match but almost no spike lands on the same step."
+spikingjelly,500,native,8347,8283,-0.007667425422307416,0.9900440712979078,0.022762669222475142,0.9181036968141937,18.6,"tau = tau_m/dt gives forward-Euler decay (1 - dt/tau_m) rather than exp(-dt/tau_m), and no synaptic delay."
+numpy_ref,1000,matched,16670,16670,0.0,0.9999999999999998,1.0,1.0,,
+nest,1000,matched,16670,16670,0.0,0.9999999999999998,1.0,1.0,,
+brian2_cython,1000,matched,16670,16670,0.0,0.9999999999999998,1.0,1.0,,
+brian2_cpp,1000,matched,16670,16670,0.0,0.9999999999999998,1.0,1.0,,
+nengo,1000,matched,16670,16670,0.0,0.9999999999999998,1.0,1.0,,
+snntorch,1000,matched,16670,16670,0.0,0.9999999999999998,0.9998200359928014,1.0,136.8,float32 state: a handful of near-threshold crossings round the other way.
+spikingjelly,1000,matched,16670,16670,0.0,0.9999999999999998,0.9998200359928014,1.0,136.8,float32 state: a handful of near-threshold crossings round the other way.
+numpy_ref,1000,native,16670,16670,0.0,0.9999999999999998,1.0,1.0,,
+nest,1000,native,16670,16670,0.0,0.9999999999999998,1.0,1.0,,"NEST's defaults already implement the spec (exact integration, delay >= 1 step, >= threshold test)."
+brian2_cython,1000,native,16670,16314,-0.021355728854229154,0.9773817484978219,0.5391721655668866,0.7791685923012451,25.1,"Default schedule adds input after the threshold test: input decays one step before it can cause a spike, and input arriving in the step a neuron fires is overwritten by the reset."
+brian2_cpp,1000,native,16670,16314,-0.021355728854229154,0.9773817484978219,0.5391721655668866,0.7791685923012451,25.1,Same default schedule as the Cython runtime: input after the threshold test.
+nengo,1000,native,16670,17033,0.021775644871025793,0.9828872705991255,0.0025794841031793643,0.9124613915900583,0.1,"Default initial membrane voltage is drawn from Uniform(0, 1) of threshold instead of starting at rest."
+snntorch,1000,native,16670,16670,0.0,0.9999999999999998,5.99880023995201e-05,1.0,22.400000000000002,"No synaptic delay: each input acts one step (0.1 ms) earlier, so spike counts match but almost no spike lands on the same step."
+spikingjelly,1000,native,16670,16559,-0.006658668266346731,0.992240890964482,0.02501499700059988,0.9195440286862165,22.400000000000002,"tau = tau_m/dt gives forward-Euler decay (1 - dt/tau_m) rather than exp(-dt/tau_m), and no synaptic delay."
+numpy_ref,2000,matched,33255,33255,0.0,0.9999999999999998,1.0,1.0,,
+nest,2000,matched,33255,33255,0.0,0.9999999999999998,1.0,1.0,,
+brian2_cython,2000,matched,33255,33255,0.0,0.9999999999999998,1.0,1.0,,
+brian2_cpp,2000,matched,33255,33255,0.0,0.9999999999999998,1.0,1.0,,
+nengo,2000,matched,33255,33255,0.0,0.9999999999999998,1.0,1.0,,
+snntorch,2000,matched,33255,33255,0.0,0.9999999999999998,0.9999097880018042,0.9999479166666667,466.1,float32 state: a handful of near-threshold crossings round the other way.
+spikingjelly,2000,matched,33255,33255,0.0,0.9999999999999998,0.9999097880018042,0.9999479166666667,466.1,float32 state: a handful of near-threshold crossings round the other way.
+numpy_ref,2000,native,33255,33255,0.0,0.9999999999999998,1.0,1.0,,
+nest,2000,native,33255,33255,0.0,0.9999999999999998,1.0,1.0,,"NEST's defaults already implement the spec (exact integration, delay >= 1 step, >= threshold test)."
+brian2_cython,2000,native,33255,32562,-0.020838971583220567,0.9776165036185575,0.5440084197864983,0.7848705261844939,19.200000000000003,"Default schedule adds input after the threshold test: input decays one step before it can cause a spike, and input arriving in the step a neuron fires is overwritten by the reset."
+brian2_cpp,2000,native,33255,32562,-0.020838971583220567,0.9776165036185575,0.5440084197864983,0.7848705261844939,19.200000000000003,Same default schedule as the Cython runtime: input after the threshold test.
+nengo,2000,native,33255,33939,0.020568335588633288,0.9834395897819581,0.002856713276199068,0.9107578938738748,0.1,"Default initial membrane voltage is drawn from Uniform(0, 1) of threshold instead of starting at rest."
+snntorch,2000,native,33255,33255,0.0,0.9999999999999998,0.0,0.9999479166666667,18.900000000000002,"No synaptic delay: each input acts one step (0.1 ms) earlier, so spike counts match but almost no spike lands on the same step."
+spikingjelly,2000,native,33255,33030,-0.006765899864682003,0.9920785634281641,0.026552398135618705,0.9245100061345098,18.900000000000002,"tau = tau_m/dt gives forward-Euler decay (1 - dt/tau_m) rather than exp(-dt/tau_m), and no synaptic delay."
+numpy_ref,4000,matched,66576,66576,0.0,1.0,1.0,1.0,,
+nest,4000,matched,66576,66576,0.0,1.0,1.0,1.0,,
+brian2_cython,4000,matched,66576,66576,0.0,1.0,1.0,1.0,,
+brian2_cpp,4000,matched,66576,66576,0.0,1.0,1.0,1.0,,
+nengo,4000,matched,66576,66576,0.0,1.0,1.0,1.0,,
+snntorch,4000,matched,66576,66576,0.0,1.0,0.9998197548666186,0.9999726447094868,77.10000000000001,float32 state: a handful of near-threshold crossings round the other way.
+spikingjelly,4000,matched,66576,66576,0.0,1.0,0.9999098774333093,1.0,77.10000000000001,float32 state: a handful of near-threshold crossings round the other way.
+numpy_ref,4000,native,66576,66576,0.0,1.0,1.0,1.0,,
+nest,4000,native,66576,66576,0.0,1.0,1.0,1.0,,"NEST's defaults already implement the spec (exact integration, delay >= 1 step, >= threshold test)."
+brian2_cython,4000,native,66576,65201,-0.020653088199951933,0.9766967315512725,0.5448059360730594,0.7834136894662062,19.5,"Default schedule adds input after the threshold test: input decays one step before it can cause a spike, and input arriving in the step a neuron fires is overwritten by the reset."
+brian2_cpp,4000,native,66576,65201,-0.020653088199951933,0.9766967315512725,0.5448059360730594,0.7834136894662062,19.5,Same default schedule as the Cython runtime: input after the threshold test.
+nengo,4000,native,66576,67947,0.0205930064888248,0.982700209007524,0.002733717856284547,0.9111473639460734,0.1,"Default initial membrane voltage is drawn from Uniform(0, 1) of threshold instead of starting at rest."
+snntorch,4000,native,66576,66576,0.0,1.0,1.5020427781783224e-05,0.9999726447094868,18.400000000000002,"No synaptic delay: each input acts one step (0.1 ms) earlier, so spike counts match but almost no spike lands on the same step."
+spikingjelly,4000,native,66576,66148,-0.00642874309060322,0.9920004065586394,0.026075462629175677,0.9259613106887421,18.400000000000002,"tau = tau_m/dt gives forward-Euler decay (1 - dt/tau_m) rather than exp(-dt/tau_m), and no synaptic delay."
+numpy_ref,8000,matched,132653,132653,0.0,1.0,1.0,1.0,,
+nest,8000,matched,132653,132653,0.0,1.0,1.0,1.0,,
+brian2_cython,8000,matched,132653,132653,0.0,1.0,1.0,1.0,,
+brian2_cpp,8000,matched,132653,132653,0.0,1.0,1.0,1.0,,
+nengo,8000,matched,132653,132653,0.0,1.0,1.0,1.0,,
+snntorch,8000,matched,132653,132651,-1.5076930035506171e-05,0.9999802243273694,0.9997436921893964,0.9998981657718821,49.300000000000004,float32 state: a handful of near-threshold crossings round the other way.
+spikingjelly,8000,matched,132653,132651,-1.5076930035506171e-05,0.9999802243273694,0.9997436921893964,0.9998981657718821,49.300000000000004,float32 state: a handful of near-threshold crossings round the other way.
+numpy_ref,8000,native,132653,132653,0.0,1.0,1.0,1.0,,
+nest,8000,native,132653,132653,0.0,1.0,1.0,1.0,,"NEST's defaults already implement the spec (exact integration, delay >= 1 step, >= threshold test)."
+brian2_cython,8000,native,132653,129775,-0.02169570232109338,0.9761687246061284,0.5424604042124943,0.780767475250429,16.5,"Default schedule adds input after the threshold test: input decays one step before it can cause a spike, and input arriving in the step a neuron fires is overwritten by the reset."
+brian2_cpp,8000,native,132653,129775,-0.02169570232109338,0.9761687246061284,0.5424604042124943,0.780767475250429,16.5,Same default schedule as the Cython runtime: input after the threshold test.
+nengo,8000,native,132653,135310,0.020029701552169946,0.9828570602747942,0.0026233858261780737,0.9123971079721508,0.1,"Default initial membrane voltage is drawn from Uniform(0, 1) of threshold instead of starting at rest."
+snntorch,8000,native,132653,132651,-1.5076930035506171e-05,0.9999802243273694,3.0153860071012342e-05,0.9998961355722314,13.100000000000001,"No synaptic delay: each input acts one step (0.1 ms) earlier, so spike counts match but almost no spike lands on the same step."
+spikingjelly,8000,native,132653,131685,-0.007297234137184986,0.990995122593142,0.024952319208762713,0.9225699586606152,13.100000000000001,"tau = tau_m/dt gives forward-Euler decay (1 - dt/tau_m) rather than exp(-dt/tau_m), and no synaptic delay."
