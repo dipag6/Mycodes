@@ -1,0 +1,7 @@
+# Tested at both ends: these minimum versions on Python 3.10, and the newest
+# releases (Dash 4.4, Plotly 7.1, pandas 3.0) on Python 3.11 to 3.14.
+dash>=2.16,<5
+plotly>=5.18,<8
+pandas>=2.0,<4
+numpy>=1.24,<3
+scipy>=1.10,<2

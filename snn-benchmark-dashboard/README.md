@@ -5,13 +5,23 @@ small pilot benchmark that shows why a speed comparison needs a fidelity check
 first.
 
 ```
-open_dashboard.py        opens the dashboard in a browser (optionally from a benchmarks.db)
-dashboard/index.html     the dashboard (open it in any browser; no install)
+python_dashboard/        the dashboard as a Python (Dash) application for snnbench campaigns
+open_dashboard.py        opens the HTML dashboard in a browser (optionally from a benchmarks.db)
+dashboard/index.html     the HTML dashboard (open it in any browser; no install)
 dashboard/template.html  the same page before the pilot data is embedded
 pilot/                   the benchmark harness that produced the pilot data,
                          and export_snnbench.py for snnbench campaign pages
 data/                    the pilot's per-run table, fidelity table and dataset
 ```
+
+## The Python application
+
+`python_dashboard/` is a Dash and Plotly application for snnbench `benchmarks.db`
+files. It has the same checks and session comparison as the HTML page, plus
+Welch's ANOVA and Shapiro–Wilk tests at the inference size. Install its `requirements.txt` and
+run `app.py` (from PyCharm or a terminal). The dashboard is then served on
+http://127.0.0.1:8050/. Its README gives the PyCharm steps. The application
+reads the database read-only, and the database itself is kept out of git.
 
 ## Open the dashboard
 

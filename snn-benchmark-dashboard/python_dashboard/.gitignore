@@ -1,0 +1,4 @@
+# Generated and private files stay out of git
+__pycache__/
+*.pyc
+data/*.db
